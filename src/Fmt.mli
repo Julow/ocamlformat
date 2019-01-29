@@ -146,6 +146,10 @@ val wrap_fits_breaks_if :
 
 (** Boxes ---------------------------------------------------------------*)
 
+val box_debug_enabled : bool ref
+(** If set to true, brackets will be printed to represent boxes. For debug
+    purposes, by default, false *)
+
 val open_vbox : int -> t
 (** Open an vbox with specified indentation. *)
 

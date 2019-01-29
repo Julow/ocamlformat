@@ -144,24 +144,36 @@ let parse_print (XUnit xunit) (conf : Conf.t) ~input_name ~input_file ic
   (* iterate until formatting stabilizes *)
   let rec print_check ~i ~(conf : Conf.t) ~ast ~comments ~source_txt
       ~source_file ~postprocess : result =
-    let tmp, oc =
-      if not Conf.debug then Filename.open_temp_file ~temp_dir:dir base ext
-      else
-        let name = Format.sprintf "%s.%i%s" base i ext in
-        let tmp = Filename.concat dir name in
-        Format.eprintf "%s@\n%!" tmp ;
-        let oc = Out_channel.create ~fail_if_exists:(not Conf.debug) tmp in
-        (tmp, oc)
-    in
     dump xunit dir base ".old" ".ast" ast ;
     let source = Source.create source_txt in
     let cmts_t = xunit.init_cmts source conf ast comments in
-    let fs = Format.formatter_of_out_channel oc in
-    postprocess fs ;
-    Fmt.set_margin conf.margin fs ;
-    xunit.fmt source cmts_t conf ast fs ;
-    Format.pp_print_newline fs () ;
-    Out_channel.close oc ;
+    let tmp =
+      let print oc =
+        let fs = Format.formatter_of_out_channel oc in
+        postprocess fs ;
+        Fmt.set_margin conf.margin fs ;
+        xunit.fmt source cmts_t conf ast fs ;
+        Format.pp_print_newline fs () ;
+        Out_channel.close oc
+      in
+      if not Conf.debug then (
+        let tmp, oc = Filename.open_temp_file ~temp_dir:dir base ext in
+        print oc ; tmp )
+      else
+        let print_to_file base_name =
+          let tmp = Filename.concat dir base_name in
+          Format.eprintf "%s@\n%!" tmp ;
+          let oc =
+            Out_channel.create ~fail_if_exists:(not Conf.debug) tmp
+          in
+          print oc ; tmp
+        in
+        let tmp = print_to_file (Format.sprintf "%s.%i%s" base i ext) in
+        Fmt.box_debug_enabled := true ;
+        ignore (print_to_file (Format.sprintf "%s.%i.boxes%s" base i ext)) ;
+        Fmt.box_debug_enabled := false ;
+        tmp
+    in
     let conf = if Conf.debug then conf else {conf with Conf.quiet= true} in
     let fmted = In_channel.with_file tmp ~f:In_channel.input_all in
     if String.equal source_txt fmted then (
