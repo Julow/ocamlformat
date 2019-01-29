@@ -145,20 +145,22 @@ let parse_print (XUnit xunit) (conf : Conf.t) ~input_name ~input_file ic
   let rec print_check ~i ~(conf : Conf.t) ~ast ~comments ~source_txt
       ~source_file ~postprocess : result =
     dump xunit dir base ".old" ".ast" ast ;
-    let source = Source.create source_txt in
-    let cmts_t = xunit.init_cmts source conf ast comments in
-    let tmp =
+    let cmts_t, tmp =
       let print oc =
+        let source = Source.create source_txt in
+        let cmts_t = xunit.init_cmts source conf ast comments in
         let fs = Format.formatter_of_out_channel oc in
         postprocess fs ;
         Fmt.set_margin conf.margin fs ;
         xunit.fmt source cmts_t conf ast fs ;
         Format.pp_print_newline fs () ;
-        Out_channel.close oc
+        Out_channel.close oc ;
+        cmts_t
       in
-      if not Conf.debug then (
+      if not Conf.debug then
         let tmp, oc = Filename.open_temp_file ~temp_dir:dir base ext in
-        print oc ; tmp )
+        let cmts_t = print oc in
+        (cmts_t, tmp)
       else
         let print_to_file base_name =
           let tmp = Filename.concat dir base_name in
@@ -166,7 +168,8 @@ let parse_print (XUnit xunit) (conf : Conf.t) ~input_name ~input_file ic
           let oc =
             Out_channel.create ~fail_if_exists:(not Conf.debug) tmp
           in
-          print oc ; tmp
+          let cmts_t = print oc in
+          (cmts_t, tmp)
         in
         let tmp = print_to_file (Format.sprintf "%s.%i%s" base i ext) in
         Fmt.box_debug_enabled := true ;
