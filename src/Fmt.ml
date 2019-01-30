@@ -181,14 +181,14 @@ let debug_box_close fs =
           (fun fs -> fmt "@<0>%s" fs close_sym)
           fs
 
-let open_box n fs = debug_box_open "<" ">" fs ; Format.pp_open_box fs n
+let open_box n fs = debug_box_open "«" "»" fs ; Format.pp_open_box fs n
 
-and open_vbox n fs = debug_box_open "(" ")" fs ; Format.pp_open_vbox fs n
+and open_vbox n fs = debug_box_open "⟨" "⟩" fs ; Format.pp_open_vbox fs n
 
-and open_hvbox n fs = debug_box_open "[" "]" fs ; Format.pp_open_hvbox fs n
+and open_hvbox n fs = debug_box_open "⦑" "⦒" fs ; Format.pp_open_hvbox fs n
 
 and open_hovbox n fs =
-  debug_box_open "{" "}" fs ;
+  debug_box_open "⟪" "⟫" fs ;
   Format.pp_open_hovbox fs n
 
 and close_box fs = debug_box_close fs ; Format.pp_close_box fs ()
