@@ -25,9 +25,9 @@ let set_margin n fs =
 
 (** Debug of formatting -------------------------------------------------*)
 
-let pp_color color_code fmt fs =
+let pp_color_k color_code k fs =
   let c = Format.sprintf "\x1B[%dm" in
-  Format.fprintf fs "@<0>%s%t@<0>%s" (c color_code) fmt (c 0)
+  Format.fprintf fs "@<0>%s%t@<0>%s" (c color_code) k (c 0)
 
 (** Break hints and format strings --------------------------------------*)
 
@@ -168,24 +168,30 @@ let box_depth_color () =
 
 let debug_box_open open_sym close_sym fs =
   if !box_debug_enabled then (
-    pp_color (box_depth_color ()) (fun fs -> fmt "@<0>%s" fs open_sym) fs ;
+    pp_color_k (box_depth_color ()) (fun fs -> fmt "@<0>%s" fs open_sym) fs ;
     box_stack := close_sym :: !box_stack )
 
 let debug_box_close fs =
   if !box_debug_enabled then
     match !box_stack with
-    | [] -> pp_color 41 (fmt "@<0>]") fs
+    | [] -> pp_color_k 41 (fmt "@<0>]") fs
     | close_sym :: tl ->
         box_stack := tl ;
-        pp_color (box_depth_color ())
+        pp_color_k (box_depth_color ())
           (fun fs -> fmt "@<0>%s" fs close_sym)
           fs
 
-let open_box n fs = debug_box_open "«" "»" fs ; Format.pp_open_box fs n
+let open_box n fs =
+  debug_box_open "«" "»" fs ;
+  Format.pp_open_box fs n
 
-and open_vbox n fs = debug_box_open "⟨" "⟩" fs ; Format.pp_open_vbox fs n
+and open_vbox n fs =
+  debug_box_open "⟨" "⟩" fs ;
+  Format.pp_open_vbox fs n
 
-and open_hvbox n fs = debug_box_open "⦑" "⦒" fs ; Format.pp_open_hvbox fs n
+and open_hvbox n fs =
+  debug_box_open "⦑" "⦒" fs ;
+  Format.pp_open_hvbox fs n
 
 and open_hovbox n fs =
   debug_box_open "⟪" "⟫" fs ;
