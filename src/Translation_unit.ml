@@ -146,33 +146,35 @@ let parse_print (XUnit xunit) (conf : Conf.t) ~input_name ~input_file ic
       ~source_file ~postprocess : result =
     dump xunit dir base ".old" ".ast" ast ;
     let remaining_comments, tmp =
-      let print_and_get_remaining_comments oc =
+      let print_and_get_remaining_comments wrap oc =
         let source = Source.create source_txt in
         let cmts_t = xunit.init_cmts source conf ast comments in
         let fs = Format.formatter_of_out_channel oc in
         postprocess fs ;
         Fmt.set_margin conf.margin fs ;
-        xunit.fmt source cmts_t conf ast fs ;
+        wrap (xunit.fmt source cmts_t conf ast) fs ;
         Format.pp_print_newline fs () ;
         Out_channel.close oc ;
         lazy (Cmts.remaining_comments cmts_t)
       in
       if not Conf.debug then
         let tmp, oc = Filename.open_temp_file ~temp_dir:dir base ext in
-        let cmts = print_and_get_remaining_comments oc in
+        let cmts = print_and_get_remaining_comments Fn.id oc in
         (cmts, tmp)
       else
-        let print_to_file base_name =
+        let print_to_file wrap base_name =
           let tmp = Filename.concat dir base_name in
           Format.eprintf "%s@\n%!" tmp ;
           let oc = Out_channel.create ~fail_if_exists:false tmp in
-          let cmts = print_and_get_remaining_comments oc in
+          let cmts = print_and_get_remaining_comments wrap oc in
           (cmts, tmp)
         in
-        let tmp = print_to_file (Format.sprintf "%s.%i%s" base i ext) in
-        Fmt.box_debug_enabled := true ;
-        ignore (print_to_file (Format.sprintf "%s.%i.boxes%s" base i ext)) ;
-        Fmt.box_debug_enabled := false ;
+        let tmp =
+          print_to_file Fn.id (Format.sprintf "%s.%i%s" base i ext)
+        in
+        ignore
+          (print_to_file Fmt.with_box_debug
+             (Format.sprintf "%s.%i.boxes%s" base i ext)) ;
         tmp
     in
     let conf = if Conf.debug then conf else {conf with Conf.quiet= true} in

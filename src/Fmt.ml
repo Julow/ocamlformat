@@ -158,6 +158,12 @@ let wrap_fits_breaks ?(space = true) conf x =
 
 let box_debug_enabled = ref false
 
+let with_box_debug k fs =
+  let g = !box_debug_enabled in
+  box_debug_enabled := true ;
+  k fs ;
+  box_debug_enabled := g
+
 let box_stack = ref []
 
 let box_depth_colors = [|32; 33; 34; 31; 35; 36|]
