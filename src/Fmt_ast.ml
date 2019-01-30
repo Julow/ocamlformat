@@ -2839,9 +2839,10 @@ and fmt_cases c ctx cs =
         let fmt_arrow_close_box =
           fmt_or_k
             (break_cases_level c > 0)
-            (fmt_or_k parens_here (fmt "@;<1 2>->@]")
-               (fmt "@;<1 -2>->@]@;<0 3>"))
-            ( fmt "@;<1 -2>->@]"
+            (fmt_or_k parens_here
+               (fmt "@;<1 2>->" $ close_box)
+               (fmt "@;<1 -2>->" $ close_box $ fmt "@;<0 3>"))
+            ( fmt "@;<1 -2>->" $ close_box
             $ fmt_or_k parens_here (fmt " (") (fmt "@;<0 -1>") )
         in
         let pro =
@@ -3506,25 +3507,24 @@ and fmt_module c ?epi keyword name xargs xbody colon xmty attributes =
     $ hvbox 4
         ( keyword $ fmt " " $ fmt_str_loc c name
         $ list_pn arg_blks (fun ?prev:_ (name, arg_mtyp) ?next ->
-              ( match arg_mtyp with
-              | Some {pro= None} -> fmt "@ @[<hv 2>("
-              | _ -> fmt "@ (" )
-              $ fmt_str_loc c name
-              $ opt arg_mtyp (fun {pro; psp; bdy; cls; esp; epi} ->
-                    fmt " : " $ Option.call ~f:pro
-                    $ fmt_if_k (Option.is_some pro) close_box
-                    $ psp $ bdy
-                    $ fmt_if_k (Option.is_some pro) cls
-                    $ esp
-                    $ ( match next with
-                      | Some (_, Some {opn; pro= Some _}) ->
-                          opn $ open_hvbox 0
-                      | _ -> fmt "" )
-                    $ Option.call ~f:epi )
-              $
+              let arg =
+                fmt "(" $ fmt_str_loc c name
+                $ opt arg_mtyp (fun {pro; psp; bdy; cls; esp; epi} ->
+                      fmt " : " $ Option.call ~f:pro
+                      $ fmt_if_k (Option.is_some pro) close_box
+                      $ psp $ bdy
+                      $ fmt_if_k (Option.is_some pro) cls
+                      $ esp
+                      $ ( match next with
+                        | Some (_, Some {opn; pro= Some _}) ->
+                            opn $ open_hvbox 0
+                        | _ -> fmt "" )
+                      $ Option.call ~f:epi )
+                $ fmt ")"
+              in
               match arg_mtyp with
-              | Some {pro= None} -> fmt ")@]"
-              | _ -> fmt ")" ) )
+              | Some {pro= None} -> fmt "@ " $ hvbox 2 arg
+              | _ -> fmt "@ " $ arg ) )
     $ Option.call ~f:pro_t
     $ fmt_if_k (Option.is_some pro_t) close_box
     $ psp_t $ bdy_t $ cls_t $ esp_t $ Option.call ~f:epi_t
