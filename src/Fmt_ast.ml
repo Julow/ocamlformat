@@ -3069,8 +3069,10 @@ and fmt_label_declaration c ctx lbl_decl ?(last = false) =
   @@ fun c ->
   let doc, atrs = doc_atrs pld_attributes in
   let indent = if Poly.(c.conf.break_separators = `Before) then 2 else 0 in
-  let fmt_cmts =
-    Cmts.fmt c.cmts ~eol:(break_unless_newline 1 indent) pld_loc
+  let cmt_after_type = Cmts.fmt_after c.cmts pld_type.ptyp_loc in
+  let fmt_cmts k =
+    Cmts.fmt c.cmts ~eol:(break_unless_newline 1 indent) pld_loc k
+    $ cmt_after_type
   in
   fmt_cmts
   @@ hvbox 4

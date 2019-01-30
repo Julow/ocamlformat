@@ -1,5 +1,6 @@
 type t =
-  { a: int (* some comment *)
+  { a: int
+  (* some comment *)
   ; b: float
   ; c: string
   ; d: [`something_looooooooooooooooooooooooooooooooong] }
@@ -19,7 +20,8 @@ type t = {a: int (* Comment *); b: int (* Comment *)}
    (issue #578) *)
 module X = struct
   type t =
-    { a: int (* Comment *)
+    { a: int
+    (* Comment *)
     ; b: int
     (* Comment *) }
 end
