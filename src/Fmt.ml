@@ -174,7 +174,9 @@ let box_depth_color () =
 
 let debug_box_open open_sym close_sym fs =
   if !box_debug_enabled then (
-    pp_color_k (box_depth_color ()) (fun fs -> fmt "@<0>%s" fs open_sym) fs ;
+    pp_color_k (box_depth_color ())
+      (fun fs -> Format.fprintf fs "@<0>%s" open_sym)
+      fs ;
     box_stack := close_sym :: !box_stack )
 
 let debug_box_close fs =
