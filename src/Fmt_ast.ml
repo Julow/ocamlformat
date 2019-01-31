@@ -3507,24 +3507,24 @@ and fmt_module c ?epi keyword name xargs xbody colon xmty attributes =
     $ hvbox 4
         ( keyword $ fmt " " $ fmt_str_loc c name
         $ list_pn arg_blks (fun ?prev:_ (name, arg_mtyp) ?next ->
-              let arg =
-                fmt "(" $ fmt_str_loc c name
-                $ opt arg_mtyp (fun {pro; psp; bdy; cls; esp; epi} ->
-                      fmt " : " $ Option.call ~f:pro
-                      $ fmt_if_k (Option.is_some pro) close_box
-                      $ psp $ bdy
-                      $ fmt_if_k (Option.is_some pro) cls
-                      $ esp
-                      $ ( match next with
-                        | Some (_, Some {opn; pro= Some _}) ->
-                            opn $ open_hvbox 0
-                        | _ -> fmt "" )
-                      $ Option.call ~f:epi )
-                $ fmt ")"
+              let maybe_box k =
+                match arg_mtyp with Some {pro= None} -> hvbox 2 k | _ -> k
               in
-              match arg_mtyp with
-              | Some {pro= None} -> fmt "@ " $ hvbox 2 arg
-              | _ -> fmt "@ " $ arg ) )
+              fmt "@ "
+              $ maybe_box
+                  ( fmt "(" $ fmt_str_loc c name
+                  $ opt arg_mtyp (fun {pro; psp; bdy; cls; esp; epi} ->
+                        fmt " : " $ Option.call ~f:pro
+                        $ fmt_if_k (Option.is_some pro) close_box
+                        $ psp $ bdy
+                        $ fmt_if_k (Option.is_some pro) cls
+                        $ esp
+                        $ ( match next with
+                          | Some (_, Some {opn; pro= Some _}) ->
+                              opn $ open_hvbox 0
+                          | _ -> fmt "" )
+                        $ Option.call ~f:epi )
+                  $ fmt ")" ) ) )
     $ Option.call ~f:pro_t
     $ fmt_if_k (Option.is_some pro_t) close_box
     $ psp_t $ bdy_t $ cls_t $ esp_t $ Option.call ~f:epi_t
