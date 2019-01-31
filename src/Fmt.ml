@@ -172,10 +172,13 @@ let box_depth_color () =
   let depth = List.length !box_stack in
   box_depth_colors.(depth % Array.length box_depth_colors)
 
-let debug_box_open open_sym close_sym fs =
+let debug_box_open open_sym close_sym n fs =
   if !box_debug_enabled then (
+    let openning =
+      if n = 0 then open_sym else Format.sprintf "%s‹%d›" open_sym n
+    in
     pp_color_k (box_depth_color ())
-      (fun fs -> Format.fprintf fs "@<0>%s" open_sym)
+      (fun fs -> Format.fprintf fs "@<0>%s" openning)
       fs ;
     box_stack := close_sym :: !box_stack )
 
@@ -190,19 +193,19 @@ let debug_box_close fs =
           fs
 
 let open_box n fs =
-  debug_box_open "«" "»" fs ;
+  debug_box_open "«" "»" n fs ;
   Format.pp_open_box fs n
 
 and open_vbox n fs =
-  debug_box_open "⟨" "⟩" fs ;
+  debug_box_open "⟨" "⟩" n fs ;
   Format.pp_open_vbox fs n
 
 and open_hvbox n fs =
-  debug_box_open "⦑" "⦒" fs ;
+  debug_box_open "⦑" "⦒" n fs ;
   Format.pp_open_hvbox fs n
 
 and open_hovbox n fs =
-  debug_box_open "⟪" "⟫" fs ;
+  debug_box_open "⟪" "⟫" n fs ;
   Format.pp_open_hovbox fs n
 
 and close_box fs = debug_box_close fs ; Format.pp_close_box fs ()
