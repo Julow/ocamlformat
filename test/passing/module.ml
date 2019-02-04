@@ -28,3 +28,55 @@ module C = struct
 
   and B : sig end = B
 end
+
+module X = struct end
+
+module X = struct
+  let () = ()
+end
+
+module X : sig
+  type t
+end = struct
+  let () = ()
+end
+
+module X : sig
+  type t
+end = struct end
+
+module X :
+  sig
+    type t
+  end
+  with type t = t = struct
+  let () = ()
+end
+
+module X :
+  sig
+    type t
+  end
+  with type t = t = struct end
+
+module X :
+  sig
+    (* b *)
+
+    type t
+  end
+  with type t = t (* c *) = (* a *) struct
+  (* d *)
+
+  let () = ()
+end
+
+module X :
+  sig
+    (** b *)
+    type t
+  end
+  with type t = t = struct
+  (** d *)
+  let () = ()
+end
