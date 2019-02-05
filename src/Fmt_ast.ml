@@ -3258,6 +3258,7 @@ and fmt_module_type c ({ast= mty} as xmty) =
       }
   | Pmty_with _ ->
       let wcs, mt = sugar_mod_with c (sub_mty ~ctx mty) in
+
       let {opn; pro; psp; bdy; cls; esp; epi} = fmt_module_type c mt in
       { empty with
         bdy=
@@ -3495,16 +3496,14 @@ and fmt_module c ?epi keyword name xargs xbody colon xmty attributes =
       ; epi= epi_b } =
     Option.value_map xbody ~default:empty ~f:(fmt_module_expr c)
   in
+
   hvbox 0
     ( fmt_docstring c ~epi:(fmt "@\n") doc
     $ opn_b
     $ (if Option.is_some epi_t then open_hovbox else open_hvbox) 0
     $ opn_t
-    $ fmt_if_k (Option.is_some pro_t) (open_hvbox 0)
-    $ ( match arg_blks with
-      | (_, Some {opn; pro= Some _}) :: _ -> opn $ open_hvbox 0
-      | _ -> fmt "" )
-    $ hvbox 4
+    $ hvbox 0 (
+     hvbox 4
         ( keyword $ fmt " " $ fmt_str_loc c name
         $ list_pn arg_blks (fun ?prev:_ (name, arg_mtyp) ?next ->
               let maybe_box k =
@@ -3513,26 +3512,21 @@ and fmt_module c ?epi keyword name xargs xbody colon xmty attributes =
               fmt "@ "
               $ maybe_box
                   ( fmt "(" $ fmt_str_loc c name
-                  $ opt arg_mtyp (fun {pro; psp; bdy; cls; esp; epi} ->
+                  $ opt arg_mtyp (fun {pro; psp; opn; cls; bdy; esp; epi} ->
                         fmt " : " $ Option.call ~f:pro
-                        $ fmt_if_k (Option.is_some pro) close_box
+                        $ opn
                         $ psp $ bdy
-                        $ fmt_if_k (Option.is_some pro) cls
                         $ esp
-                        $ ( match next with
-                          | Some (_, Some {opn; pro= Some _}) ->
-                              opn $ open_hvbox 0
-                          | _ -> fmt "" )
+                        $ cls
                         $ Option.call ~f:epi )
                   $ fmt ")" ) ) )
-    $ Option.call ~f:pro_t
-    $ fmt_if_k (Option.is_some pro_t) close_box
+    $ Option.call ~f:pro_t)
     $ psp_t $ bdy_t $ cls_t $ esp_t $ Option.call ~f:epi_t
     $ fmt_if (Option.is_some xbody) " ="
     $ fmt_if (Option.is_some pro_b) "@ "
     $ Option.call ~f:pro_b $ close_box $ psp_b
     $ fmt_if (Option.is_none pro_b && Option.is_some xbody) "@ "
-    $ bdy_b $ cls_b $ esp_b $ Option.call ~f:epi_b
+    $ bdy_b $ esp_b $ Option.call ~f:epi_b $ cls_b
     $ fmt_attributes c ~pre:(fmt "@ ") ~key:"@@" atrs
     $ fmt_if_k (Option.is_some epi) (fmt_or (Option.is_some epi_b) " " "@ ")
     $ Option.call ~f:epi )

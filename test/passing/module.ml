@@ -65,7 +65,8 @@ module X :
 
     type t
   end
-  with type t = t (* c *) = (* a *) struct
+  with type t = t (* c *) = (* a *)
+struct
   (* d *)
 
   let () = ()
