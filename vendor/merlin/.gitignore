@@ -1,0 +1,15 @@
+_build
+.merlin
+jbuild-workspace
+*.install
+*.tar.gz
+*.pyc
+
+ocamlmerlin
+ocamlmerlin-server
+ocamlmerlin-lsp
+
+# Ignore garbage files from editors
+*.un~
+*.swp
+*.swo
