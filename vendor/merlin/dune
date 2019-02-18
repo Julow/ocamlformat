@@ -1,0 +1,10 @@
+(env
+ (dev
+  (flags
+   (:standard -no-principal))
+  (ocamlc_flags ())
+  (ocamlopt_flags ()))
+ (release
+  (flags
+   (:standard -w -a))
+  (ocamlc_flags ())))
