@@ -30,24 +30,24 @@ let impl : _ Translation_unit.t =
   ; printast= Migrate_ast.Printast.implementation }
 
 (** Operations on interface files. *)
-let intf : _ Translation_unit.t =
-  { parse= Migrate_ast.Parse.interface
-  ; init_cmts= Cmts.init_intf
-  ; fmt= Fmt_ast.fmt_signature
-  ; equal= equal Normalize.equal_intf
-  ; moved_docstrings= moved_docstrings Normalize.moved_docstrings_intf
-  ; normalize= normalize Normalize.intf
-  ; printast= Migrate_ast.Printast.interface }
+(* let intf : _ Translation_unit.t = *)
+(*   { parse= Migrate_ast.Parse.interface *)
+(*   ; init_cmts= Cmts.init_intf *)
+(*   ; fmt= Fmt_ast.fmt_signature *)
+(*   ; equal= equal Normalize.equal_intf *)
+(*   ; moved_docstrings= moved_docstrings Normalize.moved_docstrings_intf *)
+(*   ; normalize= normalize Normalize.intf *)
+(*   ; printast= Migrate_ast.Printast.interface } *)
 
 (** Operations on use_file files. *)
-let use_file : _ Translation_unit.t =
-  { parse= Migrate_ast.Parse.use_file
-  ; init_cmts= Cmts.init_use_file
-  ; fmt= Fmt_ast.fmt_use_file
-  ; equal= equal Normalize.equal_use_file
-  ; moved_docstrings= moved_docstrings Normalize.moved_docstrings_use_file
-  ; normalize= normalize Normalize.use_file
-  ; printast= Migrate_ast.Printast.use_file }
+(* let use_file : _ Translation_unit.t = *)
+(*   { parse= Migrate_ast.Parse.use_file *)
+(*   ; init_cmts= Cmts.init_use_file *)
+(*   ; fmt= Fmt_ast.fmt_use_file *)
+(*   ; equal= equal Normalize.equal_use_file *)
+(*   ; moved_docstrings= moved_docstrings Normalize.moved_docstrings_use_file *)
+(*   ; normalize= normalize Normalize.use_file *)
+(*   ; printast= Migrate_ast.Printast.use_file } *)
 
 ;;
 Caml.at_exit (Format.pp_print_flush Format.err_formatter)
@@ -58,8 +58,9 @@ Caml.at_exit (Format_.pp_print_flush Format_.err_formatter)
 let format ~kind =
   match kind with
   | `Impl -> Translation_unit.parse_and_format impl
-  | `Intf -> Translation_unit.parse_and_format intf
-  | `Use_file -> Translation_unit.parse_and_format use_file
+  (* | `Intf -> Translation_unit.parse_and_format intf *)
+  (* | `Use_file -> Translation_unit.parse_and_format use_file *)
+  | _ -> assert false
 
 let to_output_file output_file data =
   match output_file with

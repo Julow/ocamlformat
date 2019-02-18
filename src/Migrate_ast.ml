@@ -9,145 +9,167 @@
  *                                                                    *
  **********************************************************************)
 
-let selected_version = Migrate_parsetree.Versions.ocaml_407
+(* let selected_version = Migrate_parsetree.Versions.ocaml_407 *)
 
-module Selected_version = Ast_407
+module Parser =
+struct
 
-include (
-  Selected_version :
-    module type of struct
-      include Selected_version
-    end
-    with module Location := Selected_version.Location )
-
-module Parse = struct
-  open Migrate_parsetree
-
-  let implementation = Parse.implementation selected_version
-
-  let interface = Parse.interface selected_version
-
-  let use_file lexbuf =
-    List.filter (Parse.use_file selected_version lexbuf)
-      ~f:(fun (p : Parsetree.toplevel_phrase) ->
-        match p with
-        | Ptop_def [] -> false
-        | Ptop_def (_ :: _) | Ptop_dir _ -> true )
+  let implementation src =
+    let conf = Mconfig.initial in
+    let kind = Mreader_parser.ML in
+    let lexer =
+      let keywords = Extension.keywords Mconfig.(conf.merlin.extensions) in
+      Mreader_lexer.make Mconfig.(conf.ocaml.warnings) keywords conf src
+    in
+    let parser = Mreader_parser.make Mconfig.(conf.ocaml.warnings) lexer kind in
+    let lexer_errors = Mreader_lexer.errors lexer
+    and parser_errors = Mreader_parser.errors parser
+    and parsetree = Mreader_parser.result parser
+    and comments = Mreader_lexer.comments lexer in
+    ignore comments; (* TODO: We have comments here *)
+    List.iter ~f:raise lexer_errors; (* TODO: handle errors *)
+    List.iter ~f:raise parser_errors;
+    parsetree
+    
 end
 
-let to_current =
-  Migrate_parsetree.Versions.(migrate selected_version ocaml_current)
+(* module Selected_version = Ast_407 *)
 
-module Printast = struct
-  open Printast
+(* include ( *)
+(*   Selected_version : *)
+(*     module type of struct *)
+(*       include Selected_version *)
+(*     end *)
+(*     with module Location := Selected_version.Location ) *)
 
-  let implementation f x = implementation f (to_current.copy_structure x)
+(* module Parse = struct *)
+(*   open Migrate_parsetree *)
 
-  let interface f x = interface f (to_current.copy_signature x)
+(*   let implementation = Parse.implementation selected_version *)
 
-  let expression n f x = expression n f (to_current.copy_expression x)
+(*   let interface = Parse.interface selected_version *)
 
-  let payload n f (x : Parsetree.payload) =
-    payload n f
-      ( match x with
-      | PStr x -> PStr (to_current.copy_structure x)
-      | PSig x -> PSig (to_current.copy_signature x)
-      | PTyp x -> PTyp (to_current.copy_core_type x)
-      | PPat (x, y) ->
-          PPat
-            ( to_current.copy_pattern x
-            , Option.map ~f:to_current.copy_expression y ) )
+(*   let use_file lexbuf = *)
+(*     List.filter (Parse.use_file selected_version lexbuf) *)
+(*       ~f:(fun (p : Parsetree.toplevel_phrase) -> *)
+(*         match p with *)
+(*         | Ptop_def [] -> false *)
+(*         | Ptop_def (_ :: _) | Ptop_dir _ -> true ) *)
+(* end *)
 
-  let copy_directive_argument (x : Parsetree.directive_argument) =
-    let open Migrate_parsetree.Versions.OCaml_current.Ast.Parsetree in
-    match x with
-    | Pdir_none -> Pdir_none
-    | Pdir_string s -> Pdir_string s
-    | Pdir_int (s, c) -> Pdir_int (s, c)
-    | Pdir_ident i -> Pdir_ident i
-    | Pdir_bool b -> Pdir_bool b
+(* let to_current = *)
+(*   Migrate_parsetree.Versions.(migrate selected_version ocaml_current) *)
 
-  let use_file f (x : Parsetree.toplevel_phrase list) =
-    List.iter x ~f:(fun (p : Parsetree.toplevel_phrase) ->
-        match p with
-        | Ptop_def s ->
-            top_phrase f (Ptop_def (to_current.copy_structure s))
-        | Ptop_dir (d, a) ->
-            top_phrase f (Ptop_dir (d, copy_directive_argument a)) )
-end
+(* module Printast = struct *)
+(*   open Printast *)
 
-module Pprintast = struct
-  open Pprintast
+(*   let implementation f x = implementation f (to_current.copy_structure x) *)
 
-  let structure f x = structure f (to_current.copy_structure x)
+(*   let interface f x = interface f (to_current.copy_signature x) *)
 
-  let signature f x = signature f (to_current.copy_signature x)
+(*   let expression n f x = expression n f (to_current.copy_expression x) *)
 
-  let core_type f x = core_type f (to_current.copy_core_type x)
+(*   let payload n f (x : Parsetree.payload) = *)
+(*     payload n f *)
+(*       ( match x with *)
+(*       | PStr x -> PStr (to_current.copy_structure x) *)
+(*       | PSig x -> PSig (to_current.copy_signature x) *)
+(*       | PTyp x -> PTyp (to_current.copy_core_type x) *)
+(*       | PPat (x, y) -> *)
+(*           PPat *)
+(*             ( to_current.copy_pattern x *)
+(*             , Option.map ~f:to_current.copy_expression y ) ) *)
 
-  let expression f x = expression f (to_current.copy_expression x)
+(*   let copy_directive_argument (x : Parsetree.directive_argument) = *)
+(*     let open Migrate_parsetree.Versions.OCaml_current.Ast.Parsetree in *)
+(*     match x with *)
+(*     | Pdir_none -> Pdir_none *)
+(*     | Pdir_string s -> Pdir_string s *)
+(*     | Pdir_int (s, c) -> Pdir_int (s, c) *)
+(*     | Pdir_ident i -> Pdir_ident i *)
+(*     | Pdir_bool b -> Pdir_bool b *)
 
-  let pattern f x = pattern f (to_current.copy_pattern x)
-end
+(*   let use_file f (x : Parsetree.toplevel_phrase list) = *)
+(*     List.iter x ~f:(fun (p : Parsetree.toplevel_phrase) -> *)
+(*         match p with *)
+(*         | Ptop_def s -> *)
+(*             top_phrase f (Ptop_def (to_current.copy_structure s)) *)
+(*         | Ptop_dir (d, a) -> *)
+(*             top_phrase f (Ptop_dir (d, copy_directive_argument a)) ) *)
+(* end *)
 
-(* Missing from ocaml_migrate_parsetree *)
-let map_use_file mapper use_file =
-  let open Parsetree in
-  List.map use_file ~f:(fun toplevel_phrase ->
-      match (toplevel_phrase : toplevel_phrase) with
-      | Ptop_def structure ->
-          Ptop_def (mapper.Ast_mapper.structure mapper structure)
-      | Ptop_dir _ as d -> d )
+(* module Pprintast = struct *)
+(*   open Pprintast *)
 
-module Position = struct
-  open Lexing
-  module Format = Format_
+(*   let structure f x = structure f (to_current.copy_structure x) *)
 
-  let column {pos_bol; pos_cnum} = pos_cnum - pos_bol
+(*   let signature f x = signature f (to_current.copy_signature x) *)
 
-  let fmt fs {pos_lnum; pos_bol; pos_cnum} =
-    if pos_lnum = -1 then Format.fprintf fs "[%d]" pos_cnum
-    else Format.fprintf fs "[%d,%d+%d]" pos_lnum pos_bol (pos_cnum - pos_bol)
+(*   let core_type f x = core_type f (to_current.copy_core_type x) *)
 
-  let compare_col p1 p2 = Int.compare (column p1) (column p2)
+(*   let expression f x = expression f (to_current.copy_expression x) *)
 
-  let compare p1 p2 =
-    if phys_equal p1 p2 then 0 else Int.compare p1.pos_cnum p2.pos_cnum
+(*   let pattern f x = pattern f (to_current.copy_pattern x) *)
+(* end *)
 
-  let distance p1 p2 = p2.pos_cnum - p1.pos_cnum
-end
+(* (1* Missing from ocaml_migrate_parsetree *1) *)
+(* let map_use_file mapper use_file = *)
+(*   let open Parsetree in *)
+(*   List.map use_file ~f:(fun toplevel_phrase -> *)
+(*       match (toplevel_phrase : toplevel_phrase) with *)
+(*       | Ptop_def structure -> *)
+(*           Ptop_def (mapper.Ast_mapper.structure mapper structure) *)
+(*       | Ptop_dir _ as d -> d ) *)
 
-module Location = struct
-  include Location
-  module Format = Format_
+(* module Position = struct *)
+(*   open Lexing *)
+(*   module Format = Format_ *)
 
-  let fmt fs {loc_start; loc_end; loc_ghost} =
-    Format.fprintf fs "(%a..%a)%s" Position.fmt loc_start Position.fmt
-      loc_end
-      (if loc_ghost then " ghost" else "")
+(*   let column {pos_bol; pos_cnum} = pos_cnum - pos_bol *)
 
-  let to_string x = Format.asprintf "%a" fmt x
+(*   let fmt fs {pos_lnum; pos_bol; pos_cnum} = *)
+(*     if pos_lnum = -1 then Format.fprintf fs "[%d]" pos_cnum *)
+(*     else Format.fprintf fs "[%d,%d+%d]" pos_lnum pos_bol (pos_cnum - pos_bol) *)
 
-  let sexp_of_t x = Sexp.Atom (to_string x)
+(*   let compare_col p1 p2 = Int.compare (column p1) (column p2) *)
 
-  let compare = Poly.compare
+(*   let compare p1 p2 = *)
+(*     if phys_equal p1 p2 then 0 else Int.compare p1.pos_cnum p2.pos_cnum *)
 
-  let hash = Hashtbl.hash
+(*   let distance p1 p2 = p2.pos_cnum - p1.pos_cnum *)
+(* end *)
 
-  let compare_start x y = Position.compare x.loc_start y.loc_start
+(* module Location = struct *)
+(*   include Location *)
+(*   module Format = Format_ *)
 
-  let compare_start_col x y = Position.compare_col x.loc_start y.loc_start
+(*   let fmt fs {loc_start; loc_end; loc_ghost} = *)
+(*     Format.fprintf fs "(%a..%a)%s" Position.fmt loc_start Position.fmt *)
+(*       loc_end *)
+(*       (if loc_ghost then " ghost" else "") *)
 
-  let compare_end x y = Position.compare x.loc_end y.loc_end
+(*   let to_string x = Format.asprintf "%a" fmt x *)
 
-  let compare_end_col x y = Position.compare_col x.loc_end y.loc_end
+(*   let sexp_of_t x = Sexp.Atom (to_string x) *)
 
-  let contains l1 l2 = compare_start l1 l2 <= 0 && compare_end l1 l2 >= 0
+(*   let compare = Poly.compare *)
 
-  let width x = Position.distance x.loc_start x.loc_end
+(*   let hash = Hashtbl.hash *)
 
-  let compare_width_decreasing l1 l2 = Int.compare (width l2) (width l1)
+(*   let compare_start x y = Position.compare x.loc_start y.loc_start *)
 
-  let is_single_line x margin =
-    width x <= margin && x.loc_start.pos_lnum = x.loc_end.pos_lnum
-end
+(*   let compare_start_col x y = Position.compare_col x.loc_start y.loc_start *)
+
+(*   let compare_end x y = Position.compare x.loc_end y.loc_end *)
+
+(*   let compare_end_col x y = Position.compare_col x.loc_end y.loc_end *)
+
+(*   let contains l1 l2 = compare_start l1 l2 <= 0 && compare_end l1 l2 >= 0 *)
+
+(*   let width x = Position.distance x.loc_start x.loc_end *)
+
+(*   let compare_width_decreasing l1 l2 = Int.compare (width l2) (width l1) *)
+
+(*   let is_single_line x margin = *)
+(*     width x <= margin && x.loc_start.pos_lnum = x.loc_end.pos_lnum *)
+(* end *)

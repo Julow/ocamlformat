@@ -17,7 +17,7 @@ type 'a t =
   { init_cmts:
       Source.t -> Conf.t -> 'a -> (string * Location.t) list -> Cmts.t
   ; fmt: Source.t -> Cmts.t -> Conf.t -> 'a -> Fmt.t
-  ; parse: Lexing.lexbuf -> 'a
+  ; parse: string -> 'a
   ; equal:
          ignore_doc_comments:bool
       -> Conf.t
@@ -39,7 +39,7 @@ type error =
   | User_error of string
 
 val parse :
-  (Lexing.lexbuf -> 'a) -> Conf.t -> source:string -> 'a with_comments
+  (string -> 'a) -> Conf.t -> source:string -> 'a with_comments
 
 val format :
      'a t

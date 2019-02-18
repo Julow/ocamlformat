@@ -21,7 +21,7 @@ type 'a t =
   { init_cmts:
       Source.t -> Conf.t -> 'a -> (string * Location.t) list -> Cmts.t
   ; fmt: Source.t -> Cmts.t -> Conf.t -> 'a -> Fmt.t
-  ; parse: Lexing.lexbuf -> 'a
+  ; parse: string -> 'a
   ; equal:
          ignore_doc_comments:bool
       -> Conf.t
@@ -72,18 +72,17 @@ end = struct
 end
 
 let parse parse_ast (conf : Conf.t) ~source =
-  let lexbuf = Lexing.from_string source in
   let warnings =
     W.enable 50
     :: (if conf.quiet then List.map ~f:W.disable W.in_lexer else [])
   in
   Warnings.parse_options false (W.to_string warnings) ;
-  let hash_bang =
-    Lexer.skip_hash_bang lexbuf ;
-    let len = lexbuf.lex_last_pos in
-    String.sub source ~pos:0 ~len
-  in
-  Location.init lexbuf !Location.input_name ;
+  (* let hash_bang = *)
+  (*   Lexer.skip_hash_bang lexbuf ; *)
+  (*   let len = lexbuf.lex_last_pos in *)
+  (*   String.sub source ~pos:0 ~len *)
+  (* in *)
+  (* Location.init lexbuf !Location.input_name ; *)
   let warning_printer = !Location.warning_printer in
   let w50 = ref [] in
   (Location.warning_printer :=
@@ -93,7 +92,7 @@ let parse parse_ast (conf : Conf.t) ~source =
            w50 := (loc, warn) :: !w50
        | _ -> if not conf.quiet then warning_printer loc fmt warn) ;
   try
-    let ast = parse_ast lexbuf in
+    let ast = parse_ast source in
     Warnings.check_fatal () ;
     Location.warning_printer := warning_printer ;
     match List.rev !w50 with
