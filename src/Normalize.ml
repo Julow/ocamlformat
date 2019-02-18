@@ -302,6 +302,9 @@ let make_mapper c ~ignore_doc_comment =
   ; class_signature
   ; class_structure }
 
+let map_structure m s = m.Ast_mapper.structure m s
+let map_signature m s = m.Ast_mapper.signature m s
+
 let mapper_ignore_doc_comment = make_mapper ~ignore_doc_comment:true
 
 let mapper = make_mapper ~ignore_doc_comment:false

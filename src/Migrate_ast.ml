@@ -30,7 +30,7 @@ struct
     List.iter ~f:raise lexer_errors; (* TODO: handle errors *)
     List.iter ~f:raise parser_errors;
     parsetree
-    
+
 end
 
 (* module Selected_version = Ast_407 *)
@@ -113,13 +113,13 @@ end
 (* end *)
 
 (* (1* Missing from ocaml_migrate_parsetree *1) *)
-(* let map_use_file mapper use_file = *)
-(*   let open Parsetree in *)
-(*   List.map use_file ~f:(fun toplevel_phrase -> *)
-(*       match (toplevel_phrase : toplevel_phrase) with *)
-(*       | Ptop_def structure -> *)
-(*           Ptop_def (mapper.Ast_mapper.structure mapper structure) *)
-(*       | Ptop_dir _ as d -> d ) *)
+let map_use_file mapper use_file =
+  let open Parsetree in
+  List.map use_file ~f:(fun toplevel_phrase ->
+      match (toplevel_phrase : toplevel_phrase) with
+      | Ptop_def structure ->
+          Ptop_def (mapper.Ast_mapper.structure mapper structure)
+      | Ptop_dir _ as d -> d )
 
 (* module Position = struct *)
 (*   open Lexing *)
