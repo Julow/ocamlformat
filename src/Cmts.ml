@@ -408,9 +408,11 @@ let init map_ast loc_of_ast source conf asts comments_n_docstrings =
   t
 
 let init_impl =
+  let map_structure m s = m.Ast_mapper.structure m s in
   init map_structure (List.map ~f:(fun {Parsetree.pstr_loc} -> pstr_loc))
 
 let init_intf =
+  let map_signature m s = m.Ast_mapper.signature m s in
   init map_signature (List.map ~f:(fun {Parsetree.psig_loc} -> psig_loc))
 
 let init_use_file =

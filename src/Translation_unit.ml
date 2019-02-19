@@ -13,15 +13,17 @@
 
 open Migrate_ast
 
+type comments = (string * Location.t) list
+
 type 'a with_comments =
-  {ast: 'a; comments: (string * Location.t) list; prefix: string}
+  {ast: 'a; comments: comments; prefix: string}
 
 (** Operations on translation units. *)
 type 'a t =
   { init_cmts:
       Source.t -> Conf.t -> 'a -> (string * Location.t) list -> Cmts.t
   ; fmt: Source.t -> Cmts.t -> Conf.t -> 'a -> Fmt.t
-  ; parse: string -> 'a
+  ; parse: string -> 'a * comments
   ; equal:
          ignore_doc_comments:bool
       -> Conf.t
@@ -83,6 +85,7 @@ let parse parse_ast (conf : Conf.t) ~source =
   (*   String.sub source ~pos:0 ~len *)
   (* in *)
   (* Location.init lexbuf !Location.input_name ; *)
+  let hash_bang = "" in (* TODO *)
   let warning_printer = !Location.warning_printer in
   let w50 = ref [] in
   (Location.warning_printer :=
@@ -92,12 +95,11 @@ let parse parse_ast (conf : Conf.t) ~source =
            w50 := (loc, warn) :: !w50
        | _ -> if not conf.quiet then warning_printer loc fmt warn) ;
   try
-    let ast = parse_ast source in
+    let ast, comments = parse_ast source in
     Warnings.check_fatal () ;
     Location.warning_printer := warning_printer ;
     match List.rev !w50 with
     | [] ->
-        let comments = Lexer.comments () in
         {ast; comments; prefix= hash_bang}
     | w50 -> raise (Warning50 w50)
   with e ->
@@ -156,7 +158,7 @@ let print_error ?(quiet_unstable = false) ?(quiet_comments = false)
     | Internal_error (`Doc_comment _, _) -> quiet_doc_comments
     | Internal_error (`Ast, _) -> false
     | Internal_error (_, _) -> .
-    | Syntaxerr.Error _ | Lexer.Error _ -> false
+    | Syntaxerr.Error _ | Lexer_raw.Error _ -> false
     | _ -> false
   in
   match error with
@@ -168,13 +170,13 @@ let print_error ?(quiet_unstable = false) ?(quiet_comments = false)
            ocaml-migrate-parsetree issue for potential future mitigation.
            https://github.com/ocaml-ppx/ocaml-migrate-parsetree/issues/34 *)
         match[@ocaml.warning "-28"] exn with
-        | Syntaxerr.Error _ | Lexer.Error _ -> " (syntax error)"
+        | Syntaxerr.Error _ | Lexer_raw.Error _ -> " (syntax error)"
         | Warning50 _ -> " (misplaced documentation comments - warning 50)"
         | _ -> ""
       in
       Format.fprintf fmt "%s: ignoring %S%s\n%!" exe input_name reason ;
       match[@ocaml.warning "-28"] exn with
-      | Syntaxerr.Error _ | Lexer.Error _ ->
+      | Syntaxerr.Error _ | Lexer_raw.Error _ ->
           Location.report_exception fmt exn
       | Warning50 l ->
           List.iter l ~f:(fun (l, w) -> !Location.warning_printer l fmt w)
@@ -221,7 +223,7 @@ let print_error ?(quiet_unstable = false) ?(quiet_comments = false)
          %!"
         exe input_name ;
       match[@ocaml.warning "-28"] exn with
-      | Syntaxerr.Error _ | Lexer.Error _ ->
+      | Syntaxerr.Error _ | Lexer_raw.Error _ ->
           Format.fprintf fmt "  BUG: generating invalid ocaml syntax.\n%!" ;
           if Conf.debug then Location.report_exception fmt exn
       | Warning50 l ->

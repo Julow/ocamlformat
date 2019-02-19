@@ -9,6 +9,8 @@
  *                                                                    *
  **********************************************************************)
 
+(* TODO: use merlin's Source ? *)
+
 open Migrate_ast
 
 type t
@@ -25,24 +27,14 @@ val string_literal :
 val char_literal : t -> Location.t -> string option
 
 val tokens_at :
-     t
-  -> ?filter:(Parser.token -> bool)
+  t
+  -> ?filter:(Parser_raw.token -> bool)
   -> Location.t
-  -> (Parser.token * Location.t) list
+  -> (Parser_raw.token * Location.t) list
 
 val loc_between : from:Location.t -> upto:Location.t -> Location.t
 (** [loc_between ~from ~upto] returns a location starting from [from] and
     ending before [upto]. *)
-
-val tokens_between :
-     t
-  -> ?filter:(Parser.token -> bool)
-  -> from:Location.t
-  -> upto:Location.t
-  -> (Parser.token * Location.t) list
-(** [tokens_between s ~filter ~from ~upto] returns the list of tokens
-    starting from [from] and ending before [upto] and respecting the
-    [filter] property. [from] must start before [upto]. *)
 
 val is_long_pexp_open : t -> Parsetree.expression -> bool
 (** [is_long_pexp_open source exp] holds if [exp] is a [Pexp_open]

@@ -9,15 +9,17 @@
  *                                                                    *
  **********************************************************************)
 
+type comments = (string * Location.t) list
+
 type 'a with_comments =
-  {ast: 'a; comments: (string * Location.t) list; prefix: string}
+  {ast: 'a; comments: comments; prefix: string}
 
 (** Operations on translation units. *)
 type 'a t =
   { init_cmts:
       Source.t -> Conf.t -> 'a -> (string * Location.t) list -> Cmts.t
   ; fmt: Source.t -> Cmts.t -> Conf.t -> 'a -> Fmt.t
-  ; parse: string -> 'a
+  ; parse: string -> 'a * comments
   ; equal:
          ignore_doc_comments:bool
       -> Conf.t
@@ -39,7 +41,7 @@ type error =
   | User_error of string
 
 val parse :
-  (string -> 'a) -> Conf.t -> source:string -> 'a with_comments
+  (string -> 'a * comments) -> Conf.t -> source:string -> 'a with_comments
 
 val format :
      'a t

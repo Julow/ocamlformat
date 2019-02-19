@@ -302,31 +302,30 @@ let make_mapper c ~ignore_doc_comment =
   ; class_signature
   ; class_structure }
 
-let map_structure m s = m.Ast_mapper.structure m s
-let map_signature m s = m.Ast_mapper.signature m s
-
 let mapper_ignore_doc_comment = make_mapper ~ignore_doc_comment:true
 
 let mapper = make_mapper ~ignore_doc_comment:false
 
-let impl c = map_structure (mapper c)
+let impl c = let m = mapper c in m.structure m
 
-let intf c = map_signature (mapper c)
+let intf c = let m = mapper c in m.signature m
 
 let use_file c = map_use_file (mapper c)
 
 let equal_impl ~ignore_doc_comments c ast1 ast2 =
-  let map =
-    if ignore_doc_comments then map_structure (mapper_ignore_doc_comment c)
-    else map_structure (mapper c)
+  let mapper =
+    if ignore_doc_comments then mapper_ignore_doc_comment c
+    else mapper c
   in
+  let map s = mapper.structure mapper s in
   Poly.equal (map ast1) (map ast2)
 
 let equal_intf ~ignore_doc_comments c ast1 ast2 =
-  let map =
-    if ignore_doc_comments then map_signature (mapper_ignore_doc_comment c)
-    else map_signature (mapper c)
+  let mapper =
+    if ignore_doc_comments then mapper_ignore_doc_comment c
+    else mapper c
   in
+  let map s = mapper.signature mapper s in
   Poly.equal (map ast1) (map ast2)
 
 let equal_use_file ~ignore_doc_comments c ast1 ast2 =
@@ -378,14 +377,16 @@ let make_docstring_mapper c docstrings =
 let docstrings_impl c s =
   let docstrings = ref [] in
   let (_ : structure) =
-    map_structure (make_docstring_mapper c docstrings) s
+    let m = make_docstring_mapper c docstrings in
+    m.structure m s
   in
   !docstrings
 
 let docstrings_intf c s =
   let docstrings = ref [] in
   let (_ : signature) =
-    map_signature (make_docstring_mapper c docstrings) s
+    let m = make_docstring_mapper c docstrings in
+    m.signature m s
   in
   !docstrings
 

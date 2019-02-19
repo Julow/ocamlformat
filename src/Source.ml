@@ -44,19 +44,20 @@ let lexbuf_from_loc t (l : Location.t) =
   let s = string_at t l in
   Lexing.from_string s
 
-let tokens_at t ?(filter = fun _ -> true) (l : Location.t) :
-    (Parser.token * Location.t) list =
-  let lexbuf = lexbuf_from_loc t l in
-  let rec loop acc =
-    match Lexer.token lexbuf with
-    | Parser.EOF -> List.rev acc
-    | tok ->
-        if filter tok then
-          let sub = Location.curr lexbuf in
-          loop ((tok, merge l ~sub) :: acc)
-        else loop acc
+let tokens_at src ?(filter = fun _ -> true) loc =
+  let conf = Mconfig.initial in
+  let lexer =
+    let keywords = Extension.keywords Mconfig.(conf.merlin.extensions) in
+    let src = Msource.make (string_at src loc) in
+    Mreader_lexer.make Mconfig.(conf.ocaml.warnings) keywords conf src
   in
-  loop []
+  List.filter_map (Mreader_lexer.tokens lexer)
+    ~f:(fun (tok, loc_start, loc_end) ->
+      if filter tok then
+        Some (tok, Location.{ loc_start; loc_end; loc_ghost = false })
+      else
+        None
+    )
 
 let find_after t f (loc : Location.t) =
   let loc = {loc with loc_start= loc.loc_end} in
@@ -69,14 +70,18 @@ let find_after t f (loc : Location.t) =
         pos := !pos + to_write ;
         to_write )
   in
+  let conf = Mconfig.initial in
+  let keywords = Extension.keywords Mconfig.(conf.merlin.extensions) in
+  let lexer_state = Lexer_raw.make keywords in
   let rec loop () =
-    match Lexer.token lexbuf with
-    | Parser.EOF -> None
-    | tok ->
+    match Lexer_raw.token lexer_state lexbuf with
+    | Return Parser_raw.EOF -> None
+    | Return tok ->
         if f tok then
           let sub = Location.curr lexbuf in
           Some (merge loc ~sub)
         else loop ()
+    | _ -> failwith "Lexer_raw.token"
   in
   loop ()
 
@@ -129,12 +134,11 @@ let extend_loc_to_include_attributes t (loc : Location.t)
 let loc_between ~(from : Location.t) ~(upto : Location.t) : Location.t =
   {from with loc_start= from.loc_end; loc_end= upto.loc_start}
 
-let tokens_between t ?(filter = fun _ -> true) ~(from : Location.t)
-    ~(upto : Location.t) : (Parser.token * Location.t) list =
+let tokens_between t ?(filter = fun _ -> true) ~from ~upto =
   tokens_at t ~filter (loc_between ~from ~upto)
 
 let contains_IN_token_between t ~(from : Location.t) ~(upto : Location.t) =
-  let filter = function Parser.IN -> true | _ -> false in
+  let filter = function Parser_raw.IN -> true | _ -> false in
   Source_code_position.ascending from.loc_start upto.loc_start < 0
   && not (List.is_empty (tokens_between t ~from ~upto ~filter))
 
@@ -151,18 +155,18 @@ let string_literal t mode (l : Location.t) =
   let toks =
     tokens_at t
       ~filter:(function
-        | Parser.STRING (_, None) -> true
-        | Parser.LBRACKETAT | Parser.LBRACKETATAT | Parser.LBRACKETATATAT ->
+        | Parser_raw.STRING (_, None) -> true
+        | LBRACKETAT | LBRACKETATAT | LBRACKETATATAT ->
             true
         | _ -> false)
       l
   in
   match toks with
-  | [(Parser.STRING (_, None), loc)]
-   |(Parser.STRING (_, None), loc)
-    :: ( Parser.LBRACKETATATAT, _
-       | Parser.LBRACKETATAT, _
-       | Parser.LBRACKETAT, _ )
+  | [(Parser_raw.STRING (_, None), loc)]
+   |(STRING (_, None), loc)
+    :: ( LBRACKETATATAT, _
+       | LBRACKETATAT, _
+       | LBRACKETAT, _ )
        :: _ ->
       Some (Literal_lexer.string mode (lexbuf_from_loc t loc))
   | _ -> None
@@ -174,18 +178,18 @@ let char_literal t (l : Location.t) =
   let toks =
     tokens_at t
       ~filter:(function
-        | Parser.CHAR _ -> true
-        | Parser.LBRACKETAT | Parser.LBRACKETATAT | Parser.LBRACKETATATAT ->
+        | Parser_raw.CHAR _ -> true
+        | LBRACKETAT | LBRACKETATAT | LBRACKETATATAT ->
             true
         | _ -> false)
       l
   in
   match toks with
-  | [(Parser.CHAR _, loc)]
-   |(Parser.CHAR _, loc)
-    :: ( Parser.LBRACKETATATAT, _
-       | Parser.LBRACKETATAT, _
-       | Parser.LBRACKETAT, _ )
+  | [(Parser_raw.CHAR _, loc)]
+   |(CHAR _, loc)
+    :: ( LBRACKETATATAT, _
+       | LBRACKETATAT, _
+       | LBRACKETAT, _ )
        :: _ ->
       Some (Literal_lexer.char (lexbuf_from_loc t loc))
   | _ -> None

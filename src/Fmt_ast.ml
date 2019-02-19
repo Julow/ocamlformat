@@ -703,15 +703,15 @@ and fmt_pattern c ?pro ?parens ({ctx= ctx0; ast= pat} as xpat) =
       (* we need to reconstruct locations for both side of the interval *)
       let toks =
         Source.tokens_at c.source ppat_loc ~filter:(function
-          | Parser.CHAR _ | Parser.DOTDOT
-           |Parser.(INT _ | STRING _ | FLOAT _) ->
+          | CHAR _ | DOTDOT
+           | INT _ | STRING _ | FLOAT _ ->
               true
           | _ -> false )
       in
       match toks with
-      | [ (Parser.(CHAR _ | INT _ | STRING _ | FLOAT _), loc1)
-        ; (Parser.DOTDOT, _)
-        ; (Parser.(CHAR _ | INT _ | STRING _ | FLOAT _), loc2) ] ->
+      | [ (Parser_raw.(CHAR _ | INT _ | STRING _ | FLOAT _), loc1)
+        ; (DOTDOT, _)
+        ; ((CHAR _ | INT _ | STRING _ | FLOAT _), loc2) ] ->
           fmt_constant ~loc:loc1 c l
           $ fmt " .. "
           $ fmt_constant ~loc:loc2 c u

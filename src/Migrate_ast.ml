@@ -11,7 +11,7 @@
 
 (* let selected_version = Migrate_parsetree.Versions.ocaml_407 *)
 
-module Parser =
+module Parse =
 struct
 
   let implementation src =
@@ -19,17 +19,18 @@ struct
     let kind = Mreader_parser.ML in
     let lexer =
       let keywords = Extension.keywords Mconfig.(conf.merlin.extensions) in
+      let src = Msource.make src in
       Mreader_lexer.make Mconfig.(conf.ocaml.warnings) keywords conf src
     in
     let parser = Mreader_parser.make Mconfig.(conf.ocaml.warnings) lexer kind in
     let lexer_errors = Mreader_lexer.errors lexer
     and parser_errors = Mreader_parser.errors parser
-    and parsetree = Mreader_parser.result parser
     and comments = Mreader_lexer.comments lexer in
-    ignore comments; (* TODO: We have comments here *)
     List.iter ~f:raise lexer_errors; (* TODO: handle errors *)
     List.iter ~f:raise parser_errors;
-    parsetree
+    match Mreader_parser.result parser with
+    | `Implementation pt -> pt, comments
+    | `Interface _ -> failwith "Parse.implementation"
 
 end
 
@@ -59,6 +60,8 @@ end
 
 (* let to_current = *)
 (*   Migrate_parsetree.Versions.(migrate selected_version ocaml_current) *)
+
+module Printast = Printast
 
 (* module Printast = struct *)
 (*   open Printast *)
@@ -121,55 +124,55 @@ let map_use_file mapper use_file =
           Ptop_def (mapper.Ast_mapper.structure mapper structure)
       | Ptop_dir _ as d -> d )
 
-(* module Position = struct *)
-(*   open Lexing *)
-(*   module Format = Format_ *)
+module Position = struct
+  open Lexing
+  module Format = Format_
 
-(*   let column {pos_bol; pos_cnum} = pos_cnum - pos_bol *)
+  let column {pos_bol; pos_cnum} = pos_cnum - pos_bol
 
-(*   let fmt fs {pos_lnum; pos_bol; pos_cnum} = *)
-(*     if pos_lnum = -1 then Format.fprintf fs "[%d]" pos_cnum *)
-(*     else Format.fprintf fs "[%d,%d+%d]" pos_lnum pos_bol (pos_cnum - pos_bol) *)
+  let fmt fs {pos_lnum; pos_bol; pos_cnum} =
+    if pos_lnum = -1 then Format.fprintf fs "[%d]" pos_cnum
+    else Format.fprintf fs "[%d,%d+%d]" pos_lnum pos_bol (pos_cnum - pos_bol)
 
-(*   let compare_col p1 p2 = Int.compare (column p1) (column p2) *)
+  let compare_col p1 p2 = Int.compare (column p1) (column p2)
 
-(*   let compare p1 p2 = *)
-(*     if phys_equal p1 p2 then 0 else Int.compare p1.pos_cnum p2.pos_cnum *)
+  let compare p1 p2 =
+    if phys_equal p1 p2 then 0 else Int.compare p1.pos_cnum p2.pos_cnum
 
-(*   let distance p1 p2 = p2.pos_cnum - p1.pos_cnum *)
-(* end *)
+  let distance p1 p2 = p2.pos_cnum - p1.pos_cnum
+end
 
-(* module Location = struct *)
-(*   include Location *)
-(*   module Format = Format_ *)
+module Location = struct
+  include Location
+  module Format = Format_
 
-(*   let fmt fs {loc_start; loc_end; loc_ghost} = *)
-(*     Format.fprintf fs "(%a..%a)%s" Position.fmt loc_start Position.fmt *)
-(*       loc_end *)
-(*       (if loc_ghost then " ghost" else "") *)
+  let fmt fs {loc_start; loc_end; loc_ghost} =
+    Format.fprintf fs "(%a..%a)%s" Position.fmt loc_start Position.fmt
+      loc_end
+      (if loc_ghost then " ghost" else "")
 
-(*   let to_string x = Format.asprintf "%a" fmt x *)
+  let to_string x = Format.asprintf "%a" fmt x
 
-(*   let sexp_of_t x = Sexp.Atom (to_string x) *)
+  let sexp_of_t x = Sexp.Atom (to_string x)
 
-(*   let compare = Poly.compare *)
+  let compare = Poly.compare
 
-(*   let hash = Hashtbl.hash *)
+  let hash = Hashtbl.hash
 
-(*   let compare_start x y = Position.compare x.loc_start y.loc_start *)
+  let compare_start x y = Position.compare x.loc_start y.loc_start
 
-(*   let compare_start_col x y = Position.compare_col x.loc_start y.loc_start *)
+  let compare_start_col x y = Position.compare_col x.loc_start y.loc_start
 
-(*   let compare_end x y = Position.compare x.loc_end y.loc_end *)
+  let compare_end x y = Position.compare x.loc_end y.loc_end
 
-(*   let compare_end_col x y = Position.compare_col x.loc_end y.loc_end *)
+  let compare_end_col x y = Position.compare_col x.loc_end y.loc_end
 
-(*   let contains l1 l2 = compare_start l1 l2 <= 0 && compare_end l1 l2 >= 0 *)
+  let contains l1 l2 = compare_start l1 l2 <= 0 && compare_end l1 l2 >= 0
 
-(*   let width x = Position.distance x.loc_start x.loc_end *)
+  let width x = Position.distance x.loc_start x.loc_end
 
-(*   let compare_width_decreasing l1 l2 = Int.compare (width l2) (width l1) *)
+  let compare_width_decreasing l1 l2 = Int.compare (width l2) (width l1)
 
-(*   let is_single_line x margin = *)
-(*     width x <= margin && x.loc_start.pos_lnum = x.loc_end.pos_lnum *)
-(* end *)
+  let is_single_line x margin =
+    width x <= margin && x.loc_start.pos_lnum = x.loc_end.pos_lnum
+end
