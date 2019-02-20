@@ -132,13 +132,16 @@ let docstring c s =
           tags
     | Error _ -> comment s
 
+(* Stdlib.Printf.printf "Keeping attribute %s\n%!" txt; *)
+(** Ignore merlin.loc and optionally doc comments *)
+let keep_attribute ~ignore_doc_comment = function
+  | {txt= "merlin.loc"; _}, _ -> false
+  | {txt= "ocaml.doc" | "ocaml.text"; _}, _ -> not ignore_doc_comment
+  | _ -> true
+
 let make_mapper c ~ignore_doc_comment =
   (* remove locations *)
   let location _ _ = Location.none in
-  let doc_attribute = function
-    | {txt= "ocaml.doc" | "ocaml.text"; _}, _ -> true
-    | _ -> false
-  in
   let attribute (m : Ast_mapper.mapper) attr =
     match attr with
     | ( {txt= ("ocaml.doc" | "ocaml.text") as txt; loc}
@@ -169,11 +172,7 @@ let make_mapper c ~ignore_doc_comment =
   in
   (* sort attributes *)
   let attributes (m : Ast_mapper.mapper) atrs =
-    let atrs =
-      if ignore_doc_comment then
-        List.filter atrs ~f:(fun a -> not (doc_attribute a))
-      else atrs
-    in
+    let atrs = List.filter atrs ~f:(keep_attribute ~ignore_doc_comment) in
     Ast_mapper.default_mapper.attributes m
       (List.sort ~compare:Poly.compare atrs)
   in
@@ -241,51 +240,43 @@ let make_mapper c ~ignore_doc_comment =
   in
   let structure (m : Ast_mapper.mapper) (si : structure) =
     let si =
-      if ignore_doc_comment then
-        List.filter si ~f:(fun si ->
-            match si.pstr_desc with
-            | Pstr_attribute a -> not (doc_attribute a)
-            | _ -> true )
-      else si
+      List.filter si ~f:(fun si ->
+          match si.pstr_desc with
+          | Pstr_attribute a -> keep_attribute ~ignore_doc_comment a
+          | _ -> true )
     in
     Ast_mapper.default_mapper.structure m si
   in
   let signature (m : Ast_mapper.mapper) (si : signature) =
     let si =
-      if ignore_doc_comment then
-        List.filter si ~f:(fun si ->
-            match si.psig_desc with
-            | Psig_attribute a -> not (doc_attribute a)
-            | _ -> true )
-      else si
+      List.filter si ~f:(fun si ->
+          match si.psig_desc with
+          | Psig_attribute a -> keep_attribute ~ignore_doc_comment a
+          | _ -> true )
     in
     Ast_mapper.default_mapper.signature m si
   in
   let class_signature (m : Ast_mapper.mapper) (si : class_signature) =
     let si =
-      if ignore_doc_comment then
-        let pcsig_fields =
-          List.filter si.pcsig_fields ~f:(fun si ->
-              match si.pctf_desc with
-              | Pctf_attribute a -> not (doc_attribute a)
-              | _ -> true )
-        in
-        {si with pcsig_fields}
-      else si
+      let pcsig_fields =
+        List.filter si.pcsig_fields ~f:(fun si ->
+            match si.pctf_desc with
+            | Pctf_attribute a -> keep_attribute ~ignore_doc_comment a
+            | _ -> true )
+      in
+      {si with pcsig_fields}
     in
     Ast_mapper.default_mapper.class_signature m si
   in
   let class_structure (m : Ast_mapper.mapper) (si : class_structure) =
     let si =
-      if ignore_doc_comment then
-        let pcstr_fields =
-          List.filter si.pcstr_fields ~f:(fun si ->
-              match si.pcf_desc with
-              | Pcf_attribute a -> not (doc_attribute a)
-              | _ -> true )
-        in
-        {si with pcstr_fields}
-      else si
+      let pcstr_fields =
+        List.filter si.pcstr_fields ~f:(fun si ->
+            match si.pcf_desc with
+            | Pcf_attribute a ->keep_attribute ~ignore_doc_comment a
+            | _ -> true )
+      in
+      {si with pcstr_fields}
     in
     Ast_mapper.default_mapper.class_structure m si
   in

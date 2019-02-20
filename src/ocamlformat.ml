@@ -21,9 +21,13 @@ let moved_docstrings f c a b =
 
 (** Operations on implementation files. *)
 let impl : _ Translation_unit.t =
+  let fmt src cmts conf ast =
+    let ast = Normalize.impl conf ast in
+    Fmt_ast.fmt_structure src cmts conf ast
+  in
   { parse= Migrate_ast.Parse.implementation
   ; init_cmts= Cmts.init_impl
-  ; fmt= Fmt_ast.fmt_structure
+  ; fmt
   ; equal= equal Normalize.equal_impl
   ; moved_docstrings= moved_docstrings Normalize.moved_docstrings_impl
   ; normalize= normalize Normalize.impl
