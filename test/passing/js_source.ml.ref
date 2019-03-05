@@ -23,7 +23,9 @@ end [@foo]
 [@@@foo]
 
 type 'a with_default =
-  ?size:int (** default [42] *) -> ?resizable:bool (** default [true] *) -> 'a
+  ?size:int (** default [42] *)
+  -> ?resizable:bool (** default [true] *)
+  -> 'a
 
 type obj = < meth1 : int -> int (** method 1 *) ; meth2 : unit -> float (** method 2 *) >
 
@@ -1350,8 +1352,8 @@ let ty_abc =
     | `C -> "C", None
   (* Define inj in advance to be able to write the type annotation easily *)
   and inj : type c.
-      (int -> string -> noarg -> unit, c) ty_sel * c -> [`A of int | `B of string | `C] =
-    function
+      (int -> string -> noarg -> unit, c) ty_sel * c
+      -> [`A of int | `B of string | `C] = function
     | Thd, v -> `A v
     | Ttl Thd, v -> `B v
     | Ttl (Ttl Thd), Noarg -> `C
@@ -1490,7 +1492,7 @@ let ty_abc : (([`A of int | `B of string | `C] as 'a), 'e) ty =
 
        method inj
            : type c.  (int -> string -> noarg -> unit, c) ty_sel * c
-                   -> [`A of int | `B of string | `C] =
+                      -> [`A of int | `B of string | `C] =
          function
          | Thd, v -> `A v
          | Ttl Thd, v -> `B v
@@ -1698,10 +1700,10 @@ let rec plus_func : type a b m n. (a, b, m) plus -> (a, b, n) plus -> (m, n) equ
 
 let rec plus_assoc : type a b c ab bc m n.
        (a, b, ab) plus
-    -> (ab, c, m) plus
-    -> (b, c, bc) plus
-    -> (a, bc, n) plus
-    -> (m, n) equal =
+       -> (ab, c, m) plus
+       -> (b, c, bc) plus
+       -> (a, bc, n) plus
+       -> (m, n) equal =
  fun p1 p2 p3 p4 ->
   match p1, p4 with
   | PlusZ b, PlusZ bc ->
@@ -1803,7 +1805,10 @@ let rec elem : type h. int -> h avl -> bool =
 ;;
 
 let rec rotr : type n.
-    n succ succ avl -> int -> n avl -> (n succ succ avl, n succ succ succ avl) sum =
+    n succ succ avl
+    -> int
+    -> n avl
+    -> (n succ succ avl, n succ succ succ avl) sum =
  fun tL y tR ->
   match tL with
   | Node (Same, a, x, b) -> Inr (Node (Less, a, x, Node (More, b, y, tR)))
@@ -1817,7 +1822,10 @@ let rec rotr : type n.
 ;;
 
 let rec rotl : type n.
-    n avl -> int -> n succ succ avl -> (n succ succ avl, n succ succ succ avl) sum =
+    n avl
+    -> int
+    -> n succ succ avl
+    -> (n succ succ avl, n succ succ succ avl) sum =
  fun tL u tR ->
   match tR with
   | Node (Same, a, x, b) -> Inr (Node (More, Node (Less, tL, u, a), x, b))
@@ -4426,8 +4434,15 @@ module Permissioned : sig
 
   include
     sig
-      val t_of_sexp : (sexp -> 'a) -> (sexp -> 'perms) -> sexp -> ('a, 'perms) t
-      val sexp_of_t : ('a -> sexp) -> ('perms -> sexp) -> ('a, 'perms) t -> sexp
+      val t_of_sexp : (sexp -> 'a)
+                      -> (sexp -> 'perms)
+                      -> sexp
+                      -> ('a, 'perms) t
+
+      val sexp_of_t : ('a -> sexp)
+                      -> ('perms -> sexp)
+                      -> ('a, 'perms) t
+                      -> sexp
   end
 
   module Int : sig
@@ -4444,14 +4459,20 @@ end = struct
 
   let _ = fun (_ : ('a, 'perms) t) -> ()
 
-  let t_of_sexp : 'a 'perms. (sexp -> 'a) -> (sexp -> 'perms) -> sexp -> ('a, 'perms) t =
+  let t_of_sexp : 'a 'perms. (sexp -> 'a)
+                             -> (sexp -> 'perms)
+                             -> sexp
+                             -> ('a, 'perms) t =
     let _tp_loc = "core_array.ml.Permissioned.t" in
     fun _of_a _of_perms t -> (array_of_sexp _of_a) t
   ;;
 
   let _ = t_of_sexp
 
-  let sexp_of_t : 'a 'perms. ('a -> sexp) -> ('perms -> sexp) -> ('a, 'perms) t -> sexp =
+  let sexp_of_t : 'a 'perms. ('a -> sexp)
+                             -> ('perms -> sexp)
+                             -> ('a, 'perms) t
+                             -> sexp =
    fun _of_a _of_perms v -> (sexp_of_array _of_a) v
  ;;
 
@@ -8864,8 +8885,8 @@ type v =
   | G
 
 let f : type a b c d e f g.
-    a t * b t * c t * d t * e t * f t * g t * v * (a, b, c, d) u * (e, f, g, g) u -> int
-    = function
+    a t * b t * c t * d t * e t * f t * g t * v * (a, b, c, d) u * (e, f, g, g) u
+    -> int = function
   | A, A, A, A, A, A, A, _, U, U -> 1
   | _, _, _, _, _, _, _, G, _, _ -> 1
 ;;

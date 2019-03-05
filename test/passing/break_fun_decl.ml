@@ -47,3 +47,8 @@ let ffffffffffffffffffff :
     -> cccccccccccccccccccccc
     -> dddddddddddddddddddddd =
   g
+
+type 'a with_default =
+     ?size:int (** default [42] *)
+  -> ?resizable:bool (** default [true] *)
+  -> 'a

@@ -55,13 +55,18 @@ let ffffffffffffffffffff : aaaaaaaaaaaaaaaaaaaaaa -> bbbbbbbbbbbbbbbbbbbbbb
 
 let ffffffffffffffffffff :
        aaaaaaaaaaaaaaaaaaaaaa
-    -> bbbbbbbbbbbbbbbbbbbbbb
-    -> cccccccccccccccccccccc =
+       -> bbbbbbbbbbbbbbbbbbbbbb
+       -> cccccccccccccccccccccc =
   g
 
 let ffffffffffffffffffff :
        aaaaaaaaaaaaaaaaaaaaaa
-    -> bbbbbbbbbbbbbbbbbbbbbb
-    -> cccccccccccccccccccccc
-    -> dddddddddddddddddddddd =
+       -> bbbbbbbbbbbbbbbbbbbbbb
+       -> cccccccccccccccccccccc
+       -> dddddddddddddddddddddd =
   g
+
+type 'a with_default =
+     ?size:int (** default [42] *)
+     -> ?resizable:bool (** default [true] *)
+     -> 'a
