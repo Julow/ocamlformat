@@ -3575,17 +3575,19 @@ and fmt_module_expr c ({ast= m} as xmod) =
         Cmts.has_after c.cmts pmod_loc || not (List.is_empty atrs)
       in
       { empty with
-        opn= opn_a $ opn_f $ open_hvbox 2
+        opn= open_hvbox 2
       ; bdy=
-          hvbox 2
             ( Cmts.fmt_before c pmod_loc
             $ fmt_docstring c ~epi:(fmt "@,") doc
+            $ opn_f
+            $ Option.call ~f:pro_f 
             $ wrap_if parens "(" ")"
-                (Option.call ~f:pro_f $ psp_f $ bdy_f $ esp_f)
-            $ Option.call ~f:epi_f $ fmt "@ " $ fmt "("
+                (psp_f $ bdy_f $ esp_f)
+            $ Option.call ~f:epi_f $ cls_f $ fmt "@ " $ fmt "("
+            $ opn_a
             $ Option.call ~f:pro_a $ psp_a $ bdy_a $ esp_a
-            $ Option.call ~f:epi_a $ fmt ")" )
-      ; cls= close_box $ cls_f $ cls_a
+            $ Option.call ~f:epi_a $ cls_a $ fmt ")" )
+      ; cls= close_box
       ; epi=
           Option.some_if has_epi
             ( Cmts.fmt_after c pmod_loc
@@ -3639,34 +3641,35 @@ and fmt_module_expr c ({ast= m} as xmod) =
         let {opn; pro; psp; bdy; cls; esp; epi} =
           Option.value_map mt ~default:empty ~f:(fmt_module_type c)
         in
-        let box_t k = opn $ k $ cls in
         let fmt_module_type _ =
-          box_t
-            ( fmt "@ :" $ Option.call ~f:pro $ psp $ fmt "@;<1 2>" $ bdy
+            ( fmt "@ :@ " $ Option.call ~f:pro $ psp $ fmt "@;<1 2>" $ bdy
             $ esp $ Option.call ~f:epi )
         in
+        opn $
         wrap "(" ")"
           (hovbox 0 (fmt_str_loc c name $ opt mt fmt_module_type))
+          $ cls
       in
       let doc, atrs = doc_atrs pmod_attributes in
       let {opn; pro; psp; bdy; cls; esp; epi} = fmt_module_expr c me in
-      { opn
+      { opn= open_hovbox 2
       ; pro= None
       ; psp= fmt ""
       ; bdy=
           Cmts.fmt c pmod_loc
           @@ ( fmt_docstring c ~epi:(fmt "@,") doc
-             $ hvbox 0
+             $ 
                  (wrap_if parens "(" ")"
                     ( fmt "functor"
                     $ fmt_attributes c ~pre:(fmt " ") ~key:"@" atrs
                     $ fmt "@;<1 2>"
                     $ list xargs "@;<1 2>" fmt_arg
                     $ fmt "@;<1 2>->" $ fmt "@;<1 2>"
-                    $ hvbox 0
-                        ( Option.call ~f:pro $ psp $ bdy $ esp
-                        $ Option.call ~f:epi ) )) )
-      ; cls
+                    $ opn
+                       $ ( Option.call ~f:pro $ psp $ bdy $ esp
+                        $ Option.call ~f:epi )
+                    $ cls )) )
+      ; cls= close_box
       ; esp= fmt ""
       ; epi= None }
   | Pmod_ident lid ->
