@@ -30,7 +30,7 @@ Jbuild_plugin.V1.send
  (names ocamlformat ocamlformat_reason)
  (flags (:standard -open Import))
  %s
- (libraries cmdliner format_ fpath import ocaml-migrate-parsetree unix uuseg uuseg.string odoc.model odoc.parser))
+ (libraries cmdliner format_ fpath import ocaml-migrate-parsetree odoc.model odoc.parser unix uuseg uuseg.string))
 
 (rule
  (targets ocamlformat.1)
