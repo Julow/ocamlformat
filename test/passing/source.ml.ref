@@ -3456,7 +3456,7 @@ module SSMap = struct
   let of_t x = x
 
   let to_t x = x
-end
+  end
 
 let ssmap =
   (module SSMap : MapT
@@ -4654,7 +4654,7 @@ module Make (O : Set.OrderedType) : S with type elt = O.t = struct
   module E = struct
     let x = 1
   end
-end
+  end
 
 module rec A : Set.OrderedType = struct
   type t = int
@@ -5408,7 +5408,7 @@ module T = struct
   module M = struct end
 
   include F (M)
-end
+  end
 
 include T
 
@@ -7006,8 +7006,8 @@ module PR_4450_2 = struct
     include MyMap (MyList)
 
     let create l = new c l
+    end
   end
-end
 
 (* A synthetic example of bootstrapped data structure (suggested by J-C
    Filliatre) *)
