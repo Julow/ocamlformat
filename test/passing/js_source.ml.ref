@@ -9679,6 +9679,24 @@ let f x =
          x.contents)
 ;;
 
+let f x =
+  x.contents
+    <- (print_string "looooooooooooooooooooooooooooooonger coucou";
+         x.contents)
+;;
+
+let f x =
+  x
+    := (print_string "coucou";
+         x.contents)
+;;
+
+let f x =
+  x
+    := (print_string "looooooooooooooooooooooooooooooonger coucou";
+         x.contents)
+;;
+
 let ( ~$ ) x = Some x
 let g x = ~$(x.contents)
 let ( ~$ ) x y = x, y

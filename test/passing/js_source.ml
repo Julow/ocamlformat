@@ -7281,6 +7281,15 @@ let foo : type a' b' c' t. a' -> b' -> c' -> t = fun a b c -> assert false
 let f x =
   x.contents <- (print_string "coucou" ; x.contents)
 
+let f x =
+  x.contents <- (print_string "looooooooooooooooooooooooooooooonger coucou" ; x.contents)
+
+let f x =
+  x := (print_string "coucou" ; x.contents)
+
+let f x =
+  x := (print_string "looooooooooooooooooooooooooooooonger coucou" ; x.contents)
+
 let ( ~$ ) x = Some x
 let g x =
   ~$ (x.contents)
