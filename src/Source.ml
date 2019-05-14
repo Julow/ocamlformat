@@ -9,6 +9,7 @@
  *                                                                    *
  **********************************************************************)
 open Migrate_ast
+open Base
 
 (** Concrete syntax. *)
 type t = string
@@ -115,7 +116,8 @@ let extend_loc_to_include_attributes t (loc : Location.t)
   let last_loc =
     List.fold l ~init:loc
       ~f:(fun (acc : Location.t)
-              (({loc; _}, payload) : Parsetree.attribute)
+              ({attr_name= {loc; _}; attr_payload= payload} :
+                Parsetree.attribute)
               ->
         if loc.loc_ghost then acc
         else
@@ -170,7 +172,9 @@ let contains_IN_token_between t ~(from : Location.t) ~(upto : Location.t) =
 
 let is_long_pexp_open source {Parsetree.pexp_desc} =
   match pexp_desc with
-  | Pexp_open (_, {loc}, {pexp_loc}) ->
+  | Pexp_open (_, {pexp_loc}) ->
+      (* FIX *)
+      let loc = pexp_loc in
       contains_IN_token_between source ~from:loc ~upto:pexp_loc
   | _ -> false
 

@@ -9,9 +9,9 @@
  *                                                                    *
  **********************************************************************)
 
-let selected_version = Migrate_parsetree.Versions.ocaml_407
+let selected_version = Migrate_parsetree.Versions.ocaml_408
 
-module Selected_version = Ast_407
+module Selected_version = Ast_408
 
 include (
   Selected_version :
@@ -19,6 +19,8 @@ include (
       include Selected_version
     end
     with module Location := Selected_version.Location )
+
+open Base
 
 module Parse = struct
   open Migrate_parsetree
@@ -79,12 +81,12 @@ end
 
 (* Missing from ocaml_migrate_parsetree *)
 let map_use_file mapper use_file =
-  let open Parsetree in
-  List.map use_file ~f:(fun toplevel_phrase ->
-      match (toplevel_phrase : toplevel_phrase) with
-      | Ptop_def structure ->
-          Ptop_def (mapper.Ast_mapper.structure mapper structure)
-      | Ptop_dir _ as d -> d)
+  Parsetree.(
+    List.map use_file ~f:(fun toplevel_phrase ->
+        match (toplevel_phrase : toplevel_phrase) with
+        | Ptop_def structure ->
+            Ptop_def (mapper.Ast_mapper.structure mapper structure)
+        | Ptop_dir _ as d -> d))
 
 module Position = struct
   open Lexing

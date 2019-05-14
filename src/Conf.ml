@@ -214,28 +214,28 @@ end = struct
     else " Cannot be set in attributes."
 
   let generated_choice_doc ~allow_inline ~all ~doc ~section ~has_default =
-    let open Format in
-    let default =
-      if has_default then
-        asprintf "The default value is $(b,%a)."
-          (fun fs (v, _, _) -> fprintf fs "%s" v)
-          (List.hd_exn all)
-      else ""
-    in
-    asprintf "%s %a %s%s" doc
-      (pp_print_list
-         ~pp_sep:(fun fs () -> fprintf fs "@,")
-         (fun fs (_, _, d) -> fprintf fs "%s" d))
-      all default
-      (in_attributes ~section allow_inline)
+    Format.(
+      let default =
+        if has_default then
+          asprintf "The default value is $(b,%a)."
+            (fun fs (v, _, _) -> fprintf fs "%s" v)
+            (List.hd_exn all)
+        else ""
+      in
+      asprintf "%s %a %s%s" doc
+        (pp_print_list
+           ~pp_sep:(fun fs () -> fprintf fs "@,")
+           (fun fs (_, _, d) -> fprintf fs "%s" d))
+        all default
+        (in_attributes ~section allow_inline))
 
   let generated_choice_docv ~all =
-    let open Format in
-    asprintf "@[<1>{%a}@]"
-      (pp_print_list
-         ~pp_sep:(fun fs () -> fprintf fs "@,|")
-         (fun fs (v, _, _) -> fprintf fs "%s" v))
-      all
+    Format.(
+      asprintf "@[<1>{%a}@]"
+        (pp_print_list
+           ~pp_sep:(fun fs () -> fprintf fs "@,|")
+           (fun fs (v, _, _) -> fprintf fs "%s" v))
+        all)
 
   let generated_flag_doc ~allow_inline ~doc ~section =
     Format.sprintf "%s%s" doc (in_attributes ~section allow_inline)
@@ -300,70 +300,71 @@ end = struct
 
   let flag ~default ~names ~doc ~section
       ?(allow_inline = Poly.(section = `Formatting)) update get_value =
-    let open Cmdliner in
-    let invert_flag = default in
-    let names_for_cmdline =
-      if invert_flag then
-        List.filter_map names ~f:(fun n ->
-            if String.length n = 1 then None else Some ("no-" ^ n))
-      else names
-    in
-    let doc = generated_flag_doc ~allow_inline ~doc ~section in
-    let docs = section_name section in
-    let term = Arg.(value & flag & info names_for_cmdline ~doc ~docs) in
-    let parse s =
-      try Ok (Bool.of_string s)
-      with _ ->
-        Error
-          (Format.sprintf "invalid value '%s', expecting 'true' or 'false'"
-             s)
-    in
-    let r = mk ~default term in
-    let to_string = Bool.to_string in
-    let cmdline_get () = if !r then Some (not invert_flag) else None in
-    let opt =
-      { names
-      ; parse
-      ; update
-      ; cmdline_get
-      ; allow_inline
-      ; default
-      ; to_string
-      ; get_value
-      ; from }
-    in
-    store := Pack opt :: !store ;
-    opt
+    Cmdliner.(
+      let invert_flag = default in
+      let names_for_cmdline =
+        if invert_flag then
+          List.filter_map names ~f:(fun n ->
+              if String.length n = 1 then None else Some ("no-" ^ n))
+        else names
+      in
+      let doc = generated_flag_doc ~allow_inline ~doc ~section in
+      let docs = section_name section in
+      let term = Arg.(value & flag & info names_for_cmdline ~doc ~docs) in
+      let parse s =
+        try Ok (Bool.of_string s)
+        with _ ->
+          Error
+            (Format.sprintf
+               "invalid value '%s', expecting 'true' or 'false'" s)
+      in
+      let r = mk ~default term in
+      let to_string = Bool.to_string in
+      let cmdline_get () = if !r then Some (not invert_flag) else None in
+      let opt =
+        { names
+        ; parse
+        ; update
+        ; cmdline_get
+        ; allow_inline
+        ; default
+        ; to_string
+        ; get_value
+        ; from }
+      in
+      store := Pack opt :: !store ;
+      opt)
 
   let int ~default ~docv ~names ~doc ~section
       ?(allow_inline = Poly.(section = `Formatting)) update get_value =
-    let open Cmdliner in
-    let doc = generated_int_doc ~allow_inline ~doc ~section ~default in
-    let docs = section_name section in
-    let term =
-      Arg.(value & opt (some int) None & info names ~doc ~docs ~docv)
-    in
-    let parse s =
-      try Ok (Int.of_string s)
-      with _ ->
-        Error (Format.sprintf "invalid value '%s', expecting an integer" s)
-    in
-    let r = mk ~default:None term in
-    let to_string = Int.to_string in
-    let cmdline_get () = !r in
-    let opt =
-      { names
-      ; parse
-      ; update
-      ; cmdline_get
-      ; allow_inline
-      ; default
-      ; to_string
-      ; get_value
-      ; from }
-    in
-    store := Pack opt :: !store ;
-    opt
+    Cmdliner.(
+      let doc = generated_int_doc ~allow_inline ~doc ~section ~default in
+      let docs = section_name section in
+      let term =
+        Arg.(value & opt (some int) None & info names ~doc ~docs ~docv)
+      in
+      let parse s =
+        try Ok (Int.of_string s)
+        with _ ->
+          Error
+            (Format.sprintf "invalid value '%s', expecting an integer" s)
+      in
+      let r = mk ~default:None term in
+      let to_string = Int.to_string in
+      let cmdline_get () = !r in
+      let opt =
+        { names
+        ; parse
+        ; update
+        ; cmdline_get
+        ; allow_inline
+        ; default
+        ; to_string
+        ; get_value
+        ; from }
+      in
+      store := Pack opt :: !store ;
+      opt)
 
   let update_from config name from =
     let is_profile_option_name x =
@@ -1315,21 +1316,21 @@ let ocp_indent_options =
 
 let ocp_indent_config =
   let doc =
-    let open Format in
-    let supported =
-      let l =
-        List.filter_map ocp_indent_options ~f:(fun (_, o) ->
-            Option.map o ~f:(fun (_, doc, _) -> doc))
+    Format.(
+      let supported =
+        let l =
+          List.filter_map ocp_indent_options ~f:(fun (_, o) ->
+              Option.map o ~f:(fun (_, doc, _) -> doc))
+        in
+        if List.is_empty l then ""
+        else
+          asprintf " %a"
+            (pp_print_list
+               ~pp_sep:(fun fs () -> fprintf fs ",@ ")
+               (fun fs s -> fprintf fs "%s" s))
+            l
       in
-      if List.is_empty l then ""
-      else
-        asprintf " %a"
-          (pp_print_list
-             ~pp_sep:(fun fs () -> fprintf fs ",@ ")
-             (fun fs s -> fprintf fs "%s" s))
-          l
-    in
-    asprintf "Read .ocp-indent configuration files.%s" supported
+      asprintf "Read .ocp-indent configuration files.%s" supported)
   in
   let default = false in
   mk ~default Arg.(value & flag & info ["ocp-indent-config"] ~doc ~docs)
