@@ -91,19 +91,19 @@ end = struct
   let children {tbl} elt = Option.value ~default:[] (Hashtbl.find tbl elt)
 
   let dump tree =
-    Fmt.(
-      let rec dump_ tree roots =
-        vbox 0
-          (list roots "@," (fun root ->
-               let children = children tree root in
-               vbox 1
-                 ( str (Sexp.to_string_hum (Itv.sexp_of_t root))
-                 $ wrap_if
-                     (not (List.is_empty children))
-                     "@,{" " }" (dump_ tree children) )))
-      in
-      if Conf.debug then set_margin 100000000 $ dump_ tree tree.roots
-      else Fn.const ())
+    let open Fmt in
+    let rec dump_ tree roots =
+      vbox 0
+        (list roots "@," (fun root ->
+             let children = children tree root in
+             vbox 1
+               ( str (Sexp.to_string_hum (Itv.sexp_of_t root))
+               $ wrap_if
+                   (not (List.is_empty children))
+                   "@,{" " }" (dump_ tree children) )))
+    in
+    if Conf.debug then set_margin 100000000 $ dump_ tree tree.roots
+    else Fn.const ()
 end
 
 module Loc_tree = struct
@@ -289,25 +289,25 @@ let partition_after_prev_or_before_next t ~prev cmts ~next =
           not (is_adjacent t l1 l2))
     with
     | [cmtl] when is_adjacent t (snd (List.last_exn cmtl)) next ->
-        Location.(
-          let same_line_as_prev l =
-            prev.loc_end.pos_lnum = l.loc_start.pos_lnum
-          in
-          let same_line_as_next l =
-            next.loc_start.pos_lnum = l.loc_start.pos_lnum
-          in
-          let prev, next =
-            if not (same_line_as_prev next) then
-              let next, prev =
-                List.partition_tf cmtl ~f:(fun (_, l1) ->
-                    same_line_as_next l1
-                    || (same_line_as_prev l1 && infix_symbol_before t prev)
-                    || not (same_line_as_prev l1))
-              in
-              (prev, next)
-            else ([], cmtl)
-          in
-          (CmtSet.of_list prev, CmtSet.of_list next))
+        let open Location in
+        let same_line_as_prev l =
+          prev.loc_end.pos_lnum = l.loc_start.pos_lnum
+        in
+        let same_line_as_next l =
+          next.loc_start.pos_lnum = l.loc_start.pos_lnum
+        in
+        let prev, next =
+          if not (same_line_as_prev next) then
+            let next, prev =
+              List.partition_tf cmtl ~f:(fun (_, l1) ->
+                  same_line_as_next l1
+                  || (same_line_as_prev l1 && infix_symbol_before t prev)
+                  || not (same_line_as_prev l1))
+            in
+            (prev, next)
+          else ([], cmtl)
+        in
+        (CmtSet.of_list prev, CmtSet.of_list next)
     | after :: befores ->
         (CmtSet.of_list after, CmtSet.of_list (List.concat befores))
     | [] -> impossible "by parent match" )
@@ -497,78 +497,78 @@ let split_asterisk_prefixed (txt, {Location.loc_start}) =
   split_asterisk_prefixed_ 0
 
 let fmt_cmt (conf : Conf.t) cmt =
-  Fmt.(
-    let fmt_asterisk_prefixed_lines lines =
-      vbox 1
-        ( fmt "(*"
-        $ list_pn lines (fun ?prev:_ line ?next ->
-              match (line, next) with
-              | "", None -> fmt ")"
-              | _, None -> str line $ fmt "*)"
-              | _, Some _ -> str line $ fmt "@,*") )
-    in
-    if not conf.wrap_comments then
-      match split_asterisk_prefixed cmt with
-      | [""] | [_] | [_; ""] -> wrap "(*" "*)" (str (fst cmt))
-      | asterisk_prefixed_lines ->
-          fmt_asterisk_prefixed_lines asterisk_prefixed_lines
-    else
-      match split_asterisk_prefixed cmt with
-      | [""] -> str "(* *)"
-      | [text] -> wrap "(*" "*)" (fill_text text)
-      | [text; ""] -> wrap "(*" " *)" (fill_text text)
-      | asterisk_prefixed_lines ->
-          fmt_asterisk_prefixed_lines asterisk_prefixed_lines)
+  let open Fmt in
+  let fmt_asterisk_prefixed_lines lines =
+    vbox 1
+      ( fmt "(*"
+      $ list_pn lines (fun ?prev:_ line ?next ->
+            match (line, next) with
+            | "", None -> fmt ")"
+            | _, None -> str line $ fmt "*)"
+            | _, Some _ -> str line $ fmt "@,*") )
+  in
+  if not conf.wrap_comments then
+    match split_asterisk_prefixed cmt with
+    | [""] | [_] | [_; ""] -> wrap "(*" "*)" (str (fst cmt))
+    | asterisk_prefixed_lines ->
+        fmt_asterisk_prefixed_lines asterisk_prefixed_lines
+  else
+    match split_asterisk_prefixed cmt with
+    | [""] -> str "(* *)"
+    | [text] -> wrap "(*" "*)" (fill_text text)
+    | [text; ""] -> wrap "(*" " *)" (fill_text text)
+    | asterisk_prefixed_lines ->
+        fmt_asterisk_prefixed_lines asterisk_prefixed_lines
 
 (** Find, remove, and format comments for loc. *)
 let fmt_cmts t (conf : Conf.t) ?pro ?epi ?(eol = Fmt.fmt "@\n") ?(adj = eol)
     tbl loc =
-  Fmt.(
-    let find = if !remove then Hashtbl.find_and_remove else Hashtbl.find in
-    match find tbl loc with
-    | None | Some [] -> noop
-    | Some cmts ->
-        let line_dist a b =
-          b.Location.loc_start.pos_lnum - a.Location.loc_end.pos_lnum
-        in
-        let groups =
-          List.group cmts ~break:(fun (_, a) (_, b) ->
-              not
-                ( Location.is_single_line a conf.margin
-                && Location.is_single_line b conf.margin
-                && line_dist a b = 1
-                && Location.compare_start_col a b = 0
-                && Location.compare_end_col a b = 0 ))
-        in
-        let last_loc = snd (List.last_exn cmts) in
-        let eol_cmt = Source.ends_line t.source last_loc in
-        let adj_cmt =
-          eol_cmt
-          && last_loc.Location.loc_end.pos_lnum + 1
-             = loc.Location.loc_start.pos_lnum
-        in
-        let maybe_newline ~next (_, cur_last_loc) =
-          match next with
-          | Some ((_, next_loc) :: _) ->
-              fmt_if (line_dist cur_last_loc next_loc > 1) "\n"
-          | _ -> noop
-        in
-        list_pn groups (fun ?prev group ?next ->
-            fmt_or_k (Option.is_none prev)
-              (Option.call ~f:pro $ open_vbox 0)
-              (fmt "@ ")
-            $ ( match group with
-              | [] -> impossible "previous match"
-              | [cmt] -> fmt_cmt conf cmt $ maybe_newline ~next cmt
-              | group ->
-                  list group "@;<1000 0>" (fun cmt ->
-                      wrap "(*" "*)" (str (fst cmt)))
-                  $ maybe_newline ~next (List.last_exn group) )
-            $ fmt_if_k (Option.is_none next)
-                ( close_box
-                $ fmt_or_k eol_cmt
-                    (fmt_or_k adj_cmt adj eol)
-                    (Option.call ~f:epi) )))
+  let open Fmt in
+  let find = if !remove then Hashtbl.find_and_remove else Hashtbl.find in
+  match find tbl loc with
+  | None | Some [] -> noop
+  | Some cmts ->
+      let line_dist a b =
+        b.Location.loc_start.pos_lnum - a.Location.loc_end.pos_lnum
+      in
+      let groups =
+        List.group cmts ~break:(fun (_, a) (_, b) ->
+            not
+              ( Location.is_single_line a conf.margin
+              && Location.is_single_line b conf.margin
+              && line_dist a b = 1
+              && Location.compare_start_col a b = 0
+              && Location.compare_end_col a b = 0 ))
+      in
+      let last_loc = snd (List.last_exn cmts) in
+      let eol_cmt = Source.ends_line t.source last_loc in
+      let adj_cmt =
+        eol_cmt
+        && last_loc.Location.loc_end.pos_lnum + 1
+           = loc.Location.loc_start.pos_lnum
+      in
+      let maybe_newline ~next (_, cur_last_loc) =
+        match next with
+        | Some ((_, next_loc) :: _) ->
+            fmt_if (line_dist cur_last_loc next_loc > 1) "\n"
+        | _ -> noop
+      in
+      list_pn groups (fun ?prev group ?next ->
+          fmt_or_k (Option.is_none prev)
+            (Option.call ~f:pro $ open_vbox 0)
+            (fmt "@ ")
+          $ ( match group with
+            | [] -> impossible "previous match"
+            | [cmt] -> fmt_cmt conf cmt $ maybe_newline ~next cmt
+            | group ->
+                list group "@;<1000 0>" (fun cmt ->
+                    wrap "(*" "*)" (str (fst cmt)))
+                $ maybe_newline ~next (List.last_exn group) )
+          $ fmt_if_k (Option.is_none next)
+              ( close_box
+              $ fmt_or_k eol_cmt
+                  (fmt_or_k adj_cmt adj eol)
+                  (Option.call ~f:epi) ))
 
 let fmt_before t conf ?pro ?(epi = Fmt.break_unless_newline 1 0) ?eol ?adj =
   fmt_cmts t conf t.cmts_before ?pro ~epi ?eol ?adj
@@ -619,11 +619,11 @@ let remaining_comments t =
                ( cmt_loc
                , cmt_txt
                , before_after
-               , Sexp.(
-                   List
-                     [ List [Atom "ast_loc"; Location.sexp_of_t ast_loc]
-                     ; List [Atom "cmt_loc"; Location.sexp_of_t cmt_loc]
-                     ; List [Atom "cmt_txt"; Atom cmt_txt] ]) )))
+               , let open Sexp in
+                 List
+                   [ List [Atom "ast_loc"; Location.sexp_of_t ast_loc]
+                   ; List [Atom "cmt_loc"; Location.sexp_of_t cmt_loc]
+                   ; List [Atom "cmt_txt"; Atom cmt_txt] ] )))
   in
   List.concat
     [ get t.cmts_before "before"

@@ -179,29 +179,29 @@ let rec is_sugared_list exp =
 let doc_atrs atrs =
   let docs, rev_atrs =
     List.fold atrs ~init:([], []) ~f:(fun (docs, rev_atrs) atr ->
-        Asttypes.(
-          match atr with
-          | { attr_name=
-                { txt= ("ocaml.doc" | "ocaml.text") as txt
-                ; loc= {loc_ghost= true} }
-            ; attr_payload=
-                PStr
-                  [ { pstr_desc=
-                        Pstr_eval
-                          ( { pexp_desc=
-                                Pexp_constant (Pconst_string (doc, None))
-                            ; pexp_loc= loc
-                            ; pexp_attributes= [] }
-                          , [] ) } ]
-            ; _ } -> (
-            match (txt, docs) with
-            | "ocaml.doc", (_, false) :: _ ->
-                (* cannot put two doc comment next to each other *)
-                (docs, atr :: rev_atrs)
-            | _ ->
-                ( ({txt= doc; loc}, String.equal "ocaml.text" txt) :: docs
-                , rev_atrs ) )
-          | _ -> (docs, atr :: rev_atrs)))
+        let open Asttypes in
+        match atr with
+        | { attr_name=
+              { txt= ("ocaml.doc" | "ocaml.text") as txt
+              ; loc= {loc_ghost= true} }
+          ; attr_payload=
+              PStr
+                [ { pstr_desc=
+                      Pstr_eval
+                        ( { pexp_desc=
+                              Pexp_constant (Pconst_string (doc, None))
+                          ; pexp_loc= loc
+                          ; pexp_attributes= [] }
+                        , [] ) } ]
+          ; _ } -> (
+          match (txt, docs) with
+          | "ocaml.doc", (_, false) :: _ ->
+              (* cannot put two doc comment next to each other *)
+              (docs, atr :: rev_atrs)
+          | _ ->
+              ( ({txt= doc; loc}, String.equal "ocaml.text" txt) :: docs
+              , rev_atrs ) )
+        | _ -> (docs, atr :: rev_atrs))
   in
   let docs = match docs with [] -> None | l -> Some (List.rev l) in
   (docs, List.rev rev_atrs)
@@ -357,7 +357,7 @@ module Signature_item : Module_item with type t = signature_item = struct
      |Psig_class_type []
      |Psig_class [] ->
         false
-    | _ -> assert false
+    | _ -> not_implemented ()
 
   let is_simple (itm, c) =
     match c.Conf.module_item_spacing with
@@ -491,45 +491,45 @@ module T = struct
           (Printast.expression 0) e
     | Cl cl ->
         let str =
-          Ast_helper.(
-            Str.class_
-              [ { pci_virt= Concrete
-                ; pci_params= []
-                ; pci_name= {txt= ""; loc= Location.none}
-                ; pci_expr= cl
-                ; pci_loc= Location.none
-                ; pci_attributes= [] } ])
+          let open Ast_helper in
+          Str.class_
+            [ { pci_virt= Concrete
+              ; pci_params= []
+              ; pci_name= {txt= ""; loc= Location.none}
+              ; pci_expr= cl
+              ; pci_loc= Location.none
+              ; pci_attributes= [] } ]
         in
         Format.fprintf fs "Cl:@\n%a@\n%a" Pprintast.structure [str]
           Printast.implementation [str]
     | Mty mt ->
         let si =
-          Ast_helper.(
-            Sig.modtype (Mtd.mk {txt= ""; loc= Location.none} ~typ:mt))
+          let open Ast_helper in
+          Sig.modtype (Mtd.mk {txt= ""; loc= Location.none} ~typ:mt)
         in
         Format.fprintf fs "Mty:@\n%a@\n%a" Pprintast.signature [si]
           Printast.interface [si]
     | Cty cty ->
         let si =
-          Ast_helper.(
-            Sig.class_type
-              [ { pci_virt= Concrete
-                ; pci_params= []
-                ; pci_name= {txt= ""; loc= Location.none}
-                ; pci_expr= cty
-                ; pci_loc= Location.none
-                ; pci_attributes= [] } ])
+          let open Ast_helper in
+          Sig.class_type
+            [ { pci_virt= Concrete
+              ; pci_params= []
+              ; pci_name= {txt= ""; loc= Location.none}
+              ; pci_expr= cty
+              ; pci_loc= Location.none
+              ; pci_attributes= [] } ]
         in
         Format.fprintf fs "Cty:@\n%a@\n%a" Pprintast.signature [si]
           Printast.interface [si]
     | Mod m ->
         let m =
-          Ast_helper.(
-            Str.module_
-              { pmb_name= {txt= ""; loc= Location.none}
-              ; pmb_expr= m
-              ; pmb_attributes= []
-              ; pmb_loc= Location.none })
+          let open Ast_helper in
+          Str.module_
+            { pmb_name= {txt= ""; loc= Location.none}
+            ; pmb_expr= m
+            ; pmb_attributes= []
+            ; pmb_loc= Location.none }
         in
         Format.fprintf fs "Mod:@\n%a@\n%a" Pprintast.structure [m]
           Printast.implementation [m]
@@ -1189,7 +1189,7 @@ end = struct
               | {pc_lhs} when pc_lhs == pat -> true
               | _ -> false) )
       | Pexp_for (p, _, _, _, _) | Pexp_fun (_, _, p, _) -> assert (p == pat)
-      | _ -> assert false )
+      | _ -> not_implemented () )
     | Cl ctx ->
         assert (
           match ctx.pcl_desc with
@@ -1336,7 +1336,7 @@ end = struct
         | Pexp_for (_, e1, e2, _, e3) ->
             assert (e1 == exp || e2 == exp || e3 == exp)
         | Pexp_override e1N -> assert (List.exists e1N ~f:snd_f)
-        | _ -> assert false )
+        | _ -> not_implemented () )
     | Str str -> (
       match str.pstr_desc with
       | Pstr_eval (e0, _) -> assert (e0 == exp)
@@ -1971,7 +1971,7 @@ end = struct
          |Pexp_variant (_, None)
          |Pexp_while _ ->
             false
-        | _ -> assert false
+        | _ -> not_implemented ()
       in
       mem_cls_exp cls exp
       || Hashtbl.Poly.find_or_add memo (cls, exp) ~default:exposed_
@@ -2054,7 +2054,7 @@ end = struct
        |Pexp_variant (_, None)
        |Pexp_while _ ->
           false
-      | _ -> assert false
+      | _ -> not_implemented ()
     in
     Hashtbl.Poly.find_or_add marked_parenzed_inner_nested_match exp
       ~default:exposed_

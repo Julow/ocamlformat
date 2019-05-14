@@ -9,6 +9,8 @@
  *                                                                    *
  **********************************************************************)
 
+module Format = Format_
+
 (** Format OCaml Ast *)
 
 open Migrate_ast
@@ -16,8 +18,6 @@ open Asttypes
 open Parsetree
 open Ast
 open Fmt
-open Base
-module Format = Format_
 
 type c = {conf: Conf.t; source: Source.t; cmts: Cmts.t}
 
@@ -1737,6 +1737,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
             (parens || not (List.is_empty pexp_attributes))
             "(" ")"
             ( hvbox 0
+                (* XXX check me *)
                 ( hvbox 2
                     (hvbox 2
                        ( pre
@@ -2126,7 +2127,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
            $ hvbox 2 (fmt_expression c (sub_exp ~ctx expr)) ))
   | Pexp_poly _ ->
       impossible "only used for methods, handled during method formatting"
-  | _ -> assert false
+  | _ -> not_implemented ()
 
 and fmt_class_structure c ~ctx ?ext self_ fields =
   let _, fields =
@@ -3014,7 +3015,7 @@ and fmt_signature_item c ?ext {ast= si} =
   | Psig_class cl -> fmt_class_types c ctx ~pre:"class" ~sep:":" cl
   | Psig_class_type cl ->
       fmt_class_types c ctx ~pre:"class type" ~sep:"=" cl
-  | _ -> assert false
+  | _ -> not_implemented ()
 
 and fmt_class_types c ctx ~pre ~sep (cls : class_type class_infos list) =
   list_fl cls (fun ~first ~last:_ cl ->
@@ -3203,7 +3204,7 @@ and fmt_open_declaration c
         $ fmt_if Poly.(popen_override = Override) "!"
         $ str " " $ fmt_longident_loc c lid
         $ fmt_attributes c ~pre:(str " ") ~key:"@@" atrs )
-  | _ -> assert false
+  | _ -> not_implemented ()
 
 and fmt_with_constraint c ctx = function
   | Pwith_type (ident, td) ->
@@ -3751,6 +3752,7 @@ and fmt_module_binding c ctx ~rec_flag ~first pmb =
     (fmt_module c keyword pmb.pmb_name xargs (Some xbody) true xmty
        pmb.pmb_attributes)
 
+(* XXX use more locations *)
 let fmt_toplevel_phrase c ctx = function
   | Ptop_def structure -> fmt_structure c ctx structure
   | Ptop_dir {pdir_name= dir; pdir_arg= directive_argument} -> (
