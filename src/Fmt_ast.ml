@@ -2129,11 +2129,6 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
   | _ -> assert false
 
 and fmt_class_structure c ~ctx ?ext self_ fields =
-  let fields =
-    List.sort fields
-      ~compare:
-        (Comparable.lift Location.compare_start ~f:(fun x -> x.pcf_loc))
-  in
   let _, fields =
     List.fold_map fields ~init:c ~f:(fun c i ->
         let c =
@@ -2173,11 +2168,6 @@ and fmt_class_structure c ~ctx ?ext self_ fields =
   $ str "end"
 
 and fmt_class_signature c ~ctx ~parens ?ext self_ fields =
-  let fields =
-    List.sort fields
-      ~compare:
-        (Comparable.lift Location.compare_start ~f:(fun x -> x.pctf_loc))
-  in
   let _, fields =
     List.fold_map fields ~init:c ~f:(fun c i ->
         let c =
