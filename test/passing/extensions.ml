@@ -155,3 +155,5 @@ let value =
       | x -> false
       | _ -> true
     ]
+
+let _ = [%ext let+ a = b in c]

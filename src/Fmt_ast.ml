@@ -3571,7 +3571,9 @@ and fmt_structure_item c ~last:last_item ?ext {ctx; ast= si} =
               binding
             in
             let op = if first && first_grp then "let" else "and" in
-            let rec_flag = (first && first_grp && Poly.(rec_flag = Recursive)) in
+            let rec_flag =
+              first && first_grp && Poly.(rec_flag = Recursive)
+            in
             fmt_if (not first) "@\n"
             $ fmt_value_binding c op ~rec_flag
                 ?ext:(if first && first_grp then ext else None)
@@ -3598,9 +3600,9 @@ and fmt_let c ctx ~ext ~rec_flag ~bindings ~parens ~fmt_atrs ~fmt_expr =
       binding
     in
     let op = if first then "let" else "and" in
-    let rec_flag = (first && Poly.(rec_flag = Recursive)) in
-    fmt_value_binding c op ~rec_flag ?ext ctx ~in_ ~attributes ~loc
-      pvb_pat pvb_expr
+    let rec_flag = first && Poly.(rec_flag = Recursive) in
+    fmt_value_binding c op ~rec_flag ?ext ctx ~in_ ~attributes ~loc pvb_pat
+      pvb_expr
     $ fmt_if (not last)
         ( match c.conf.let_and with
         | `Sparse -> "@;<1000 0>"
@@ -3617,8 +3619,8 @@ and fmt_let_op c ctx ~ext ~parens ~fmt_atrs ~fmt_expr bindings =
     let ext = if first then ext else None in
     let in_ indent = fmt_if_k last (break 1 (-indent) $ str "in") in
     let {pbop_op= {txt= op}; pbop_pat; pbop_exp; pbop_loc= loc} = binding in
-    fmt_value_binding c op ~rec_flag:false ?ext ~in_
-      ctx ~attributes:[] ~loc pbop_pat pbop_exp
+    fmt_value_binding c op ~rec_flag:false ?ext ~in_ ctx ~attributes:[] ~loc
+      pbop_pat pbop_exp
     $ fmt_if (not last)
         ( match c.conf.let_and with
         | `Sparse -> "@;<1000 0>"
@@ -3630,8 +3632,8 @@ and fmt_let_op c ctx ~ext ~parens ~fmt_atrs ~fmt_expr bindings =
        $ fmt "@;<1000 0>" $ hvbox 0 fmt_expr ))
   $ fmt_atrs
 
-and fmt_value_binding c let_op ~rec_flag ?ext ?in_ ?epi ctx
-    ~attributes ~loc pvb_pat pvb_expr =
+and fmt_value_binding c let_op ~rec_flag ?ext ?in_ ?epi ctx ~attributes ~loc
+    pvb_pat pvb_expr =
   update_config_maybe_disabled c loc attributes
   @@ fun c ->
   let doc1, atrs = doc_atrs attributes in
@@ -3737,8 +3739,7 @@ and fmt_value_binding c let_op ~rec_flag ?ext ?in_ ?epi ctx
               ( str let_op
               $ fmt_extension_suffix c ext
               $ fmt_attributes c ~key:"@" at_attrs
-              $ fmt_if rec_flag " rec"
-              $ str " " $ fmt_pattern c xpat
+              $ fmt_if rec_flag " rec" $ str " " $ fmt_pattern c xpat
               $ fmt_if_k
                   (not (List.is_empty xargs))
                   ( fmt "@ "

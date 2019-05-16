@@ -151,3 +151,8 @@ let value = [%any_extension fun x -> y] x
 let value = f [%any_extension try x with x -> false | _ -> true]
 
 let value = f [%any_extension match x with x -> false | _ -> true]
+
+let _ =
+  [%ext
+    let+ a = b in
+    c]
