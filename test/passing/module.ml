@@ -55,3 +55,7 @@ end)
 let x : (module S) = (module struct end)
 
 let x = (module struct end : S)
+
+module A (_ : S) = struct end
+
+module A : functor (_ : S) -> S' = functor (_ : S) -> struct end
