@@ -1767,8 +1767,8 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
             (parens || not (List.is_empty pexp_attributes))
             "(" ")"
             ( hvbox 2
-                (fmt_module c keyword name xargs (Some xbody) true xmty []
-                   ~epi:(str "in") ~can_sparse)
+                (fmt_module c keyword ~eqty:":" name xargs (Some xbody) xmty
+                   [] ~epi:(str "in") ~can_sparse)
             $ fmt "@;<1000 0>"
             $ fmt_expression c (sub_exp ~ctx exp) )
         $ fmt_atrs )
@@ -3011,6 +3011,7 @@ and fmt_signature_item c ?ext {ast= si} =
   | Psig_modtype mtd -> fmt_module_type_declaration c ctx mtd
   | Psig_module md ->
       hvbox 0 (fmt_module_declaration c ctx ~rec_flag:false ~first:true md)
+  | Psig_modsubst ms -> hvbox 0 (fmt_module_substitution c ctx ms)
   | Psig_open od -> fmt_open_description c od
   | Psig_recmodule mds ->
       fmt_recmodule c ctx mds fmt_module_declaration (fun x ->
@@ -3022,7 +3023,6 @@ and fmt_signature_item c ?ext {ast= si} =
   | Psig_class_type cl ->
       fmt_class_types c ctx ~pre:"class type" ~sep:"=" cl
   | Psig_typesubst decls -> fmt_type c ?ext ~eq:":=" Recursive decls ctx
-  | Psig_modsubst _ -> not_implemented ()
 
 and fmt_class_types c ctx ~pre ~sep (cls : class_type class_infos list) =
   list_fl cls (fun ~first ~last:_ cl ->
@@ -3077,8 +3077,8 @@ and fmt_class_exprs c ctx (cls : class_expr class_infos list) =
           $ fmt "@;" $ fmt_class_expr c e )
       $ fmt_attributes c ~pre:(fmt "@;") ~key:"@@" atrs)
 
-and fmt_module c ?epi ?(can_sparse = false) keyword name xargs xbody colon
-    xmty attributes =
+and fmt_module c ?epi ?(can_sparse = false) keyword ?(eqty = "=") name xargs
+    xbody xmty attributes =
   let doc, atrs = doc_atrs attributes in
   let f (name, xarg) = (name, Option.map ~f:(fmt_module_type c) xarg) in
   let arg_blks = List.map xargs ~f in
@@ -3088,8 +3088,7 @@ and fmt_module c ?epi ?(can_sparse = false) keyword name xargs xbody colon
         { blk with
           pro=
             Some
-              ( fmt_or colon " :" " ="
-              $ opt blk.pro (fun pro -> str " " $ pro) )
+              (str " " $ str eqty $ opt blk.pro (fun pro -> str " " $ pro))
         ; psp= fmt_if (Option.is_none blk.pro) "@;<1 2>" $ blk.psp })
   in
   let blk_b =
@@ -3172,18 +3171,33 @@ and fmt_module_declaration c ctx ~rec_flag ~first pmd =
       Sugar.functor_type c.cmts ~for_functor_kw:false
         (sub_mty ~ctx pmd_type)
   in
-  let colon =
-    match xmty.ast.pmty_desc with Pmty_alias _ -> false | _ -> true
+  let eqty =
+    match xmty.ast.pmty_desc with Pmty_alias _ -> None | _ -> Some ":"
   in
   Cmts.fmt c pmd_loc
-    (fmt_module c keyword pmd_name xargs None colon (Some xmty)
+    (fmt_module c keyword pmd_name xargs None ?eqty (Some xmty)
        pmd_attributes)
+
+and fmt_module_substitution c ctx pms =
+  let {pms_name; pms_manifest; pms_attributes; pms_loc} = pms in
+  update_config_maybe_disabled c pms_loc pms_attributes
+  @@ fun c ->
+  let xmty =
+    (* TODO: improve *)
+    sub_mty ~ctx
+      { pmty_desc= Pmty_ident pms_manifest
+      ; pmty_loc= pms_loc
+      ; pmty_attributes= [] }
+  in
+  Cmts.fmt c pms_loc
+    (fmt_module c (str "module") ~eqty:":=" pms_name [] None (Some xmty)
+       pms_attributes)
 
 and fmt_module_type_declaration c ctx pmtd =
   let {pmtd_name; pmtd_type; pmtd_attributes; pmtd_loc} = pmtd in
   update_config_maybe_disabled c pmtd_loc pmtd_attributes
   @@ fun c ->
-  fmt_module c (str "module type") pmtd_name [] None false
+  fmt_module c (str "module type") pmtd_name [] None
     (Option.map pmtd_type ~f:(sub_mty ~ctx))
     pmtd_attributes
 
@@ -3784,7 +3798,7 @@ and fmt_module_binding c ctx ~rec_flag ~first pmb =
     | _ -> (xbody, None)
   in
   Cmts.fmt c pmb.pmb_loc
-    (fmt_module c keyword pmb.pmb_name xargs (Some xbody) true xmty
+    (fmt_module c keyword ~eqty:":" pmb.pmb_name xargs (Some xbody) xmty
        pmb.pmb_attributes)
 
 (* XXX use more locations *)
