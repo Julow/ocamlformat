@@ -65,3 +65,15 @@ class type a =
 
 and b = object end
 (** about b *)
+
+class type i =
+  object
+    (* test *)
+    inherit oo
+  end
+
+class i =
+  object
+    (* test *)
+    inherit oo
+  end

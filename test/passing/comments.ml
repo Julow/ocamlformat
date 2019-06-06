@@ -152,3 +152,21 @@ let () =
   xxxxxxxxxx
   land (* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx *)
     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+type t = < (* a *)
+  a : int[@atr]; (* b *)
+  b : int; (* c *)
+>
+
+type t = <
+  a : int; (* a *)
+  (* b *) .. (* c *)
+>
+
+type t = < (* a *) .. (* b *) >
+
+class type i = object (* test *)
+inherit oo end
+
+class i = object (* test *)
+inherit oo end
