@@ -410,13 +410,13 @@ let wrap_tuple ~parens ~no_parens_if_break c =
 
 let parse_docstring c ~loc text =
   let location = loc.Location.loc_start in
-  let parsed = Odoc__parser.Parser.parse_comment_raw ~location ~text in
+  let parsed = Odoc_parser.parse_comment_raw ~location ~text in
   match parsed with
   | {value; warnings= []} -> Ok value
   | {warnings} ->
       if not c.conf.quiet then
         List.iter warnings ~f:(fun w ->
-            let msg = Odoc__model.Error.to_string w in
+            let msg = Odoc_model.Error.to_string w in
             Caml.Format.eprintf
               "%a:@,Warning: Invalid documentation comment:@,%s\n%!"
               Location.print_loc loc msg ) ;
@@ -474,8 +474,8 @@ let fmt_docstring_around_item' ?(force_before = false) ?(fit = false) c doc1
       in
       let floating_doc, doc =
         doc
-        |> List.map ~f:(fun ((s, _) as doc) ->
-               (parse_docstring c ~loc s.txt, doc))
+        |> List.map ~f:(fun (({txt;loc}, _) as doc) ->
+               (parse_docstring c ~loc txt, doc))
         |> List.partition_tf ~f:(fun (_, (_, floating)) -> floating)
       in
       let floating_doc = fmt_doc ~epi:(fmt "@\n") floating_doc in
