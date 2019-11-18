@@ -1,0 +1,8 @@
+(* The following code should be formatted using the default config and not
+   OCamlformat's *)
+
+type t = int
+(** This docstring should be parsed
+
+    - a
+    - b *)
