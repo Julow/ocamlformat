@@ -697,11 +697,16 @@ and fmt_core_type c ?(box = true) ?(in_type_declaration = false) ?pro
               | Rinherit _ -> None
             in
             let max_len_name = List.fold_left rfs ~init:(Some 0) ~f:max in
-            list rfs
-              ( if in_type_declaration && Poly.(c.conf.type_decl = `Sparse)
-              then "@;<1000 0>| "
-              else "@ | " )
-              (fmt_row_field c ~max_len_name ctx)
+            let break =
+              if in_type_declaration && Poly.(c.conf.type_decl = `Sparse)
+              then fmt "@;<1000 0>"
+              else fmt "@ "
+            in
+            list_fl rfs (fun ~first ~last:_ row ->
+                let pro, break =
+                  if first then (noop, noop) else (str "| ", break)
+                in
+                break $ fmt_row_field c ~max_len_name ~pro ctx row)
       in
       let protect_token =
         match List.last rfs with
@@ -788,7 +793,7 @@ and fmt_package_type c ctx cnstrs =
   list_fl cnstrs fmt_cstr
 
 and fmt_row_field c ctx {prf_desc; prf_attributes= atrs; prf_loc}
-    ~max_len_name =
+    ~max_len_name ~pro =
   let c = update_config c atrs in
   let doc, atrs = doc_atrs atrs in
   let row =
@@ -808,15 +813,17 @@ and fmt_row_field c ctx {prf_desc; prf_attributes= atrs; prf_loc}
                    (fits_breaks ~level:2 "" pad))
           | None -> noop
         in
-        fmt_str_loc c ~pre:(str "`") name
+        Cmts.fmt c ~pro:(fmt "@ ") name.loc (pro $ str "`" $ str name.txt)
         $ fmt_padding
         $ fmt_if (not (const && List.is_empty typs)) " of@ "
         $ fmt_if (const && not (List.is_empty typs)) " & "
         $ list typs "@ & " (sub_typ ~ctx >> fmt_core_type c)
-    | Rinherit typ -> fmt_core_type c (sub_typ ~ctx typ)
+    | Rinherit typ -> pro $ fmt_core_type c (sub_typ ~ctx typ)
   in
+  let cmt_before = Cmts.fmt_before c ~epi:(fmt "@\n") prf_loc
+  and cmt_after = Cmts.fmt_after c prf_loc in
   hvbox 0
-    ( hvbox 0 (Cmts.fmt c prf_loc row)
+    ( cmt_before $ row $ cmt_after
     $ fmt_attributes c ~key:"@" atrs
     $ fmt_docstring_padded c doc )
 
