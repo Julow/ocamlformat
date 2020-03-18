@@ -1365,8 +1365,9 @@ and fmt_sequence c ?ext ~has_attr parens width xexp pexp_loc fmt_atrs =
     opt prev f $ list_pn x fmt_seq
   in
   hvbox 0
-    (Params.wrap_exp c.conf c.source ~loc:pexp_loc ~parens
-       ( wrap_if has_attr "(" ")"
+    (Params.wrap_exp ~fits_breaks:(not has_attr) c.conf c.source
+       ~loc:pexp_loc ~parens
+       ( wrap_fits_breaks_if c.conf has_attr "(" ")"
            (hvbox_if (parens || has_attr) 0 @@ list_pn grps fmt_seq_list)
        $ fmt_atrs ))
 

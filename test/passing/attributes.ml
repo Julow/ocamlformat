@@ -239,5 +239,10 @@ let _ =
 (* Ensure that adding an attribute doesn't break left-alignment of sequenced
    expressions *)
 let _ =
-  (aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ;
-   bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb) [@a]
+  ( aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ;
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ) [@a]
+
+let _ =
+  f
+    (( aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ;
+       bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ) [@a])
