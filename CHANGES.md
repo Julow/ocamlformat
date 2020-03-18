@@ -45,6 +45,8 @@
 
   + Remove unecessary parentheses in the argument of indexing operators (#1280) (Jules Aguillon)
 
+  + Retain attributes on sequences, e.g. `(a; b) [@a]` (#1291) (Craig Ferguson)
+
 ### 0.13.0 (2020-01-28)
 
 #### New features
