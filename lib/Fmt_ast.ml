@@ -3695,6 +3695,7 @@ and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
                     $ hvbox 4
                         ( str keyword
                         $ fmt_extension_suffix c ext
+                        $ fmt_attributes c ~pre:(Break (1, 0)) atrs
                         $ fmt_if rec_flag " rec" $ str " "
                         $ fmt_str_loc_opt c name $ list_pn arg_blks fmt_arg
                         )
@@ -3707,9 +3708,7 @@ and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
         $ blk_b.psp
         $ fmt_if (Option.is_none blk_b.pro && Option.is_some xbody) "@ "
         $ blk_b.bdy )
-    $ blk_b.esp $ fmt_opt blk_b.epi
-    $ fmt_item_attributes c ~pre:(Break (1, 0)) atrs
-    $ doc_after
+    $ blk_b.esp $ fmt_opt blk_b.epi $ doc_after
     $ opt epi (fun epi ->
           fmt_or_k compact
             (fmt_or

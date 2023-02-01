@@ -104,13 +104,13 @@ external%foo x : _ = "" [@@foo]
 
 exception%foo X [@@foo]
 
-module%foo M = M [@@foo]
+module%foo [@foo] M = M
 
-module%foo rec M : S = M [@@foo]
+module%foo [@foo] rec M : S = M
 
-and M : S = M [@@foo]
+and [@foo] M : S = M
 
-module type%foo S = S [@@foo]
+module type%foo [@foo] S = S
 
 include%foo M [@@foo]
 
@@ -130,16 +130,16 @@ module type S = sig
 
   [%%foo: exception X [@@foo]]
 
-  [%%foo: module M : S [@@foo]]
+  [%%foo: module [@foo] M : S]
 
   [%%foo:
-  module rec M : S [@@foo]
+  module [@foo] rec M : S
 
-  and M : S [@@foo]]
+  and [@foo] M : S]
 
-  [%%foo: module M = M [@@foo]]
+  [%%foo: module [@foo] M = M]
 
-  [%%foo: module type S = S [@@foo]]
+  [%%foo: module type [@foo] S = S]
 
   [%%foo: include M [@@foo]]
 

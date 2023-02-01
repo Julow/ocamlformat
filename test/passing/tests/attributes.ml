@@ -65,7 +65,7 @@ module type M = sig
 
   module T : [%ext] [@test7]
 
-  module T = T [@@test8]
+  module [@test8] T = T
 end
 
 let f = fun [@inline] [@inline never] x -> x
@@ -177,7 +177,7 @@ type t = {a: int}
 [@@deriving xxxxxxxxxxxxxxxxxxxxxxxxxxx]
 
 module type A = sig
-  module A := A.B [@@attr]
+  module [@attr] A := A.B
 end
 
 module M = struct

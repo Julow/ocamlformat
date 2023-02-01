@@ -41,6 +41,7 @@
 - Remove unnecessary parentheses around partially applied infix operators with attributes (#2198, @gpetiot)
 - JaneStreet profile: doesn't align infix ops with open paren (#2204, @gpetiot)
 - Re-use the type let_binding from the parser instead of value_binding, improve the spacing of let-bindings regarding of having extension or comments (#2219, @gpetiot)
+- Modules attributes are now formatted right after the `module` keyword, instead of at the end of the module definition (#2247, @emiletrotignon)
 
 ### New features
 
