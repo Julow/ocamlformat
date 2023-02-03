@@ -1487,15 +1487,14 @@ signature_item:
 (* A module declaration. *)
 %inline module_declaration:
   MODULE
-  ext = ext attrs1 = attributes
+  ext = ext attrs_start = attributes
   name = mkrhs(module_name)
   body = module_declaration_body
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Md.mk name body ~attrs ~loc ~docs, ext
+    Md.mk name body ~attrs_start ~attrs_end ~loc ~docs, ext
   }
 ;
 
@@ -1514,16 +1513,15 @@ module_declaration_body:
 (* A module alias declaration (in a signature). *)
 %inline module_alias:
   MODULE
-  ext = ext attrs1 = attributes
+  ext = ext attrs_start = attributes
   name = mkrhs(module_name)
   EQUAL
   body = module_expr_alias
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Md.mk name body ~attrs ~loc ~docs, ext
+    Md.mk name body ~attrs_start ~attrs_end ~loc ~docs, ext
   }
 ;
 %inline module_expr_alias:
@@ -1554,32 +1552,30 @@ module_subst:
 %inline rec_module_declaration:
   MODULE
   ext = ext
-  attrs1 = attributes
+  attrs_start = attributes
   REC
   name = mkrhs(module_name)
   COLON
   mty = module_type
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    ext, Md.mk name mty ~attrs ~loc ~docs
+    ext, Md.mk name mty ~attrs_start ~attrs_end ~loc ~docs
   }
 ;
 %inline and_module_declaration:
   AND
-  attrs1 = attributes
+  attrs_start = attributes
   name = mkrhs(module_name)
   COLON
   mty = module_type
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let docs = symbol_docs $sloc in
     let loc = make_loc $sloc in
     let text = symbol_text $symbolstartpos in
-    Md.mk name mty ~attrs ~loc ~text ~docs
+    Md.mk name mty ~attrs_start ~attrs_end ~loc ~text ~docs
   }
 ;
 

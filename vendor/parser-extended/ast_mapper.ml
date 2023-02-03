@@ -752,11 +752,13 @@ let default_mapper =
     let_bindings = LB.map_let_bindings;
 
     module_declaration =
-      (fun this {pmd_name; pmd_type; pmd_attributes; pmd_loc} ->
+      (fun this
+         {pmd_name; pmd_type; pmd_attributes_start; pmd_attributes_end; pmd_loc} ->
          Md.mk
            (map_loc this pmd_name)
            (this.module_type this pmd_type)
-           ~attrs:(this.attributes this pmd_attributes)
+           ~attrs_start:(this.attributes this pmd_attributes_start)
+           ~attrs_end:(this.attributes this pmd_attributes_end)
            ~loc:(this.location this pmd_loc)
       );
 

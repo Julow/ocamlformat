@@ -409,18 +409,25 @@ module Signature_item = struct
      |Psig_class_type ({pci_attributes= atrs; _} :: _)
      |Psig_class ({pci_attributes= atrs; _} :: _) ->
         List.exists ~f:Attr.is_doc atrs
-    | Psig_recmodule
-        ( {pmd_type= {pmty_attributes= atrs1; _}; pmd_attributes= atrs2; _}
-        :: _ )
-     |Psig_include
+    | Psig_include
         {pincl_mod= {pmty_attributes= atrs1; _}; pincl_attributes= atrs2; _}
      |Psig_exception
         { ptyexn_attributes= atrs1
         ; ptyexn_constructor= {pext_attributes= atrs2; _}
-        ; _ }
-     |Psig_module
-        {pmd_attributes= atrs1; pmd_type= {pmty_attributes= atrs2; _}; _} ->
+        ; _ } ->
         List.exists ~f:Attr.is_doc atrs1 || List.exists ~f:Attr.is_doc atrs2
+    | Psig_recmodule
+        ( { pmd_type= {pmty_attributes= atrs1; _}
+          ; pmd_attributes_start= atrs2
+          ; pmd_attributes_end= atrs3
+          ; _ }
+        :: _ )
+     |Psig_module
+        { pmd_attributes_start= atrs1
+        ; pmd_attributes_end= atrs2
+        ; pmd_type= {pmty_attributes= atrs3; _}
+        ; _ } ->
+        List.exists ~f:(List.exists ~f:Attr.is_doc) [atrs1; atrs2; atrs3]
     | Psig_type (_, [])
      |Psig_typesubst []
      |Psig_recmodule []
@@ -509,7 +516,9 @@ module Mb = struct
 end
 
 module Md = struct
-  let has_doc itm = List.exists ~f:Attr.is_doc itm.pmd_attributes
+  let has_doc itm =
+    List.exists ~f:Attr.is_doc
+      (itm.pmd_attributes_start @ itm.pmd_attributes_end)
 
   let is_simple (i, (c : Conf.t)) =
     Poly.(c.fmt_opts.module_item_spacing.v = `Compact)
@@ -663,7 +672,7 @@ let attributes = function
   | Exp x -> x.pexp_attributes
   | Lb x -> x.lb_attributes
   | Mb x -> x.pmb_attributes
-  | Md x -> x.pmd_attributes
+  | Md x -> (x.pmd_attributes_start @ x.pmd_attributes_end)
   | Cl x -> x.pcl_attributes
   | Mty x -> x.pmty_attributes
   | Mod x -> x.pmod_attributes

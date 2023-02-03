@@ -177,7 +177,7 @@ type t = {a: int}
 [@@deriving xxxxxxxxxxxxxxxxxxxxxxxxxxx]
 
 module type A = sig
-  module [@attr] A := A.B
+  module A := A.B [@@attr]
 end
 
 module M = struct

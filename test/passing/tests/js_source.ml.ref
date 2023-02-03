@@ -6,17 +6,19 @@ type t = Foo of (t[@foo]) [@foo] [@@foo]
 
 [@@@foo]
 
-module [@foo] M = struct
+module M = struct
   type t = { l : (t[@foo]) [@foo] } [@@foo] [@@foo]
 
   [@@@foo]
 end [@foo]
+[@@foo]
 
-module type [@foo] S = sig
+module type S = sig
   include ((module type of M [@foo]) [@foo] with type t := M.t [@foo]) [@@foo]
 
   [@@@foo]
 end [@foo]
+[@@foo]
 
 [@@@foo]
 
@@ -179,12 +181,12 @@ class%foo x = x [@@foo]
 class type%foo x = x [@@foo]
 external%foo x : _ = "" [@@foo]
 exception%foo X [@foo]
-module%foo [@foo] M = M
+module%foo M = M [@@foo]
 
-module%foo [@foo] rec M : S = M
-and [@foo] M : S = M
+module%foo rec M : S = M [@@foo]
+and M : S = M [@@foo]
 
-module type%foo [@foo] S = S
+module type%foo S = S [@@foo]
 include%foo M [@@foo]
 open%foo M [@@foo]
 
@@ -204,7 +206,7 @@ module type S = sig
   and [@foo] M : S
 
   module%foo [@foo] M = M
-  module type%foo [@foo] S = S
+  module type%foo S = S [@@foo]
   include%foo M [@@foo]
   open%foo M [@@foo]
   class%foo x : t [@@foo]

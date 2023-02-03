@@ -335,8 +335,8 @@ module Str:
 (** Module declarations *)
 module Md:
   sig
-    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> ?text:text ->
-      str_opt -> module_type -> module_declaration
+    val mk: ?loc:loc -> ?attrs_start:attrs -> ?attrs_end:attrs -> ?docs:docs -> 
+      ?text:text -> str_opt -> module_type -> module_declaration
   end
 
 (** Module substitutions *)

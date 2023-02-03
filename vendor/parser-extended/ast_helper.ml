@@ -365,13 +365,14 @@ module Val = struct
 end
 
 module Md = struct
-  let mk ?(loc = !default_loc) ?(attrs = [])
+  let mk ?(loc = !default_loc) ?(attrs_start = []) ?(attrs_end = [])
         ?(docs = empty_docs) ?(text = []) name typ =
     {
      pmd_name = name;
      pmd_type = typ;
-     pmd_attributes =
-       add_text_attrs text (add_docs_attrs docs attrs);
+     pmd_attributes_start = attrs_start;
+     pmd_attributes_end =
+       add_text_attrs text (add_docs_attrs docs attrs_end);
      pmd_loc = loc;
     }
 end

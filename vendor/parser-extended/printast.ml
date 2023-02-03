@@ -990,7 +990,8 @@ and module_type_declaration i ppf x =
 and module_declaration i ppf pmd =
   line i ppf "module_declaration %a %a\n" fmt_str_opt_loc pmd.pmd_name
     fmt_location pmd.pmd_loc;
-  attributes i ppf pmd.pmd_attributes;
+  attributes i ppf pmd.pmd_attributes_start;
+  attributes i ppf pmd.pmd_attributes_end;
   module_type (i+1) ppf pmd.pmd_type;
 
 and module_binding i ppf x =

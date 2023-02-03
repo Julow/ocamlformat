@@ -914,7 +914,8 @@ and module_declaration =
     {
      pmd_name: string option loc;
      pmd_type: module_type;
-     pmd_attributes: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pmd_attributes_start: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pmd_attributes_end: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pmd_loc: Location.t;
     }
 (** Values of type [module_declaration] represents [S : MT] *)
