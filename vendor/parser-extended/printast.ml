@@ -831,7 +831,8 @@ and signature_item i ppf x =
         fmt_string_loc pms.pms_name
         fmt_longident_loc pms.pms_manifest;
       fmt_location ppf pms.pms_loc;
-      attributes i ppf pms.pms_attributes;
+      attributes i ppf pms.pms_attributes_start;
+      attributes i ppf pms.pms_attributes_end;
   | Psig_recmodule decls ->
       line i ppf "Psig_recmodule\n";
       list i module_declaration ppf decls;

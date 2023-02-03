@@ -763,11 +763,14 @@ let default_mapper =
       );
 
     module_substitution =
-      (fun this {pms_name; pms_manifest; pms_attributes; pms_loc} ->
+      (fun this 
+         { pms_name; pms_manifest; pms_attributes_start; pms_attributes_end; 
+           pms_loc } ->
          Ms.mk
            (map_loc this pms_name)
            (map_loc this pms_manifest)
-           ~attrs:(this.attributes this pms_attributes)
+           ~attrs_start:(this.attributes this pms_attributes_start)
+           ~attrs_end:(this.attributes this pms_attributes_end)
            ~loc:(this.location this pms_loc)
       );
 

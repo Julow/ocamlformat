@@ -924,7 +924,8 @@ and module_substitution =
     {
      pms_name: string loc;
      pms_manifest: Longident.t loc;
-     pms_attributes: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pms_attributes_start: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pms_attributes_end: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pms_loc: Location.t;
     }
 (** Values of type [module_substitution] represents [S := M] *)

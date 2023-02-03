@@ -3746,8 +3746,14 @@ and fmt_module_declaration ?ext c ctx ~rec_flag ~first pmd =
        ~rec_flag:(rec_flag && first) ~attrs_start ~attrs_end )
 
 and fmt_module_substitution ?ext c ctx pms =
-  let {pms_name; pms_manifest; pms_attributes; pms_loc} = pms in
-  update_config_maybe_disabled c pms_loc pms_attributes
+  let { pms_name
+      ; pms_manifest
+      ; pms_attributes_start= attrs_start
+      ; pms_attributes_end= attrs_end
+      ; pms_loc } =
+    pms
+  in
+  update_config_maybe_disabled c pms_loc (attrs_start @ attrs_end)
   @@ fun c ->
   let xmty =
     (* TODO: improve *)
@@ -3759,7 +3765,7 @@ and fmt_module_substitution ?ext c ctx pms =
   let pms_name = {pms_name with txt= Some pms_name.txt} in
   Cmts.fmt c pms_loc
     (fmt_module ?ext c ctx "module" ~eqty:":=" pms_name [] None (Some xmty)
-       ~attrs_start:[] ~attrs_end:pms_attributes ~rec_flag:false )
+       ~attrs_start ~attrs_end ~rec_flag:false )
 
 and fmt_module_type_declaration ?ext ?eqty c ctx pmtd =
   let {pmtd_name; pmtd_type; pmtd_attributes; pmtd_loc} = pmtd in

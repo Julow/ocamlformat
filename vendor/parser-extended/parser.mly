@@ -1562,16 +1562,15 @@ module_declaration_body:
 (* A module substitution (in a signature). *)
 module_subst:
   MODULE
-  ext = ext attrs1 = attributes
+  ext = ext attrs_start = attributes
   uid = mkrhs(UIDENT)
   COLONEQUAL
   body = mkrhs(mod_ext_longident)
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Ms.mk uid body ~attrs ~loc ~docs, ext
+    Ms.mk uid body ~attrs_start ~attrs_end ~loc ~docs, ext
   }
 | MODULE ext attributes mkrhs(UIDENT) COLONEQUAL error
     { expecting $loc($6) "module path" }

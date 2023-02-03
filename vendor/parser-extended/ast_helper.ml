@@ -378,13 +378,14 @@ module Md = struct
 end
 
 module Ms = struct
-  let mk ?(loc = !default_loc) ?(attrs = [])
+  let mk ?(loc = !default_loc) ?(attrs_start = []) ?(attrs_end = [])
         ?(docs = empty_docs) ?(text = []) name syn =
     {
      pms_name = name;
      pms_manifest = syn;
-     pms_attributes =
-       add_text_attrs text (add_docs_attrs docs attrs);
+     pms_attributes_start=attrs_start;
+     pms_attributes_end =
+       add_text_attrs text (add_docs_attrs docs attrs_end);
      pms_loc = loc;
     }
 end

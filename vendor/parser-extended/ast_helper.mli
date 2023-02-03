@@ -342,8 +342,8 @@ module Md:
 (** Module substitutions *)
 module Ms:
   sig
-    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> ?text:text ->
-      str -> lid -> module_substitution
+    val mk: ?loc:loc -> ?attrs_start:attrs -> ?attrs_end:attrs -> ?docs:docs -> 
+      ?text:text -> str -> lid -> module_substitution
   end
 
 (** Module type declarations *)

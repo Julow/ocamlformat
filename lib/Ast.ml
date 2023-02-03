@@ -403,13 +403,14 @@ module Signature_item = struct
      |Psig_typext {ptyext_attributes= atrs; _}
      |Psig_modtype {pmtd_attributes= atrs; _}
      |Psig_modtypesubst {pmtd_attributes= atrs; _}
-     |Psig_modsubst {pms_attributes= atrs; _}
      |Psig_open {popen_attributes= atrs; _}
      |Psig_extension (_, atrs)
      |Psig_class_type ({pci_attributes= atrs; _} :: _)
      |Psig_class ({pci_attributes= atrs; _} :: _) ->
         List.exists ~f:Attr.is_doc atrs
-    | Psig_include
+    | Psig_modsubst
+        {pms_attributes_start= atrs1; pms_attributes_end= atrs2; _}
+     |Psig_include
         {pincl_mod= {pmty_attributes= atrs1; _}; pincl_attributes= atrs2; _}
      |Psig_exception
         { ptyexn_attributes= atrs1
@@ -672,7 +673,7 @@ let attributes = function
   | Exp x -> x.pexp_attributes
   | Lb x -> x.lb_attributes
   | Mb x -> x.pmb_attributes
-  | Md x -> (x.pmd_attributes_start @ x.pmd_attributes_end)
+  | Md x -> x.pmd_attributes_start @ x.pmd_attributes_end
   | Cl x -> x.pcl_attributes
   | Mty x -> x.pmty_attributes
   | Mod x -> x.pmod_attributes
