@@ -914,7 +914,7 @@ and module_declaration =
     {
      pmd_name: string option loc;
      pmd_type: module_type;
-     pmd_attributes_start: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pmd_ext_attributes: string loc option * attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pmd_attributes_end: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pmd_loc: Location.t;
     }
@@ -924,7 +924,7 @@ and module_substitution =
     {
      pms_name: string loc;
      pms_manifest: Longident.t loc;
-     pms_attributes_start: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pms_ext_attributes: string loc option * attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pms_attributes_end: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pms_loc: Location.t;
     }
@@ -934,7 +934,8 @@ and module_type_declaration =
     {
      pmtd_name: string loc;
      pmtd_type: module_type option;
-     pmtd_attributes: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pmtd_ext_attributes: string loc option * attributes;  (** [... [\@\@id1] [\@\@id2]] *)
+     pmtd_attributes_end: attributes;  (** [... [\@\@id1] [\@\@id2]] *)
      pmtd_loc: Location.t;
     }
 (** Values of type [module_type_declaration] represents:
@@ -1080,7 +1081,8 @@ and module_binding =
     {
      pmb_name: string option loc;
      pmb_expr: module_expr;
-     pmb_attributes: attributes;
+     pmb_ext_attributes: string loc option * attributes;
+     pmb_attributes_end: attributes;
      pmb_loc: Location.t;
     }
 (** Values of type [module_binding] represents [module X = ME] *)

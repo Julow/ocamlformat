@@ -1215,6 +1215,8 @@ structure_item:
           Pstr_extension ($1, add_docs_attrs docs $2) }
     | floating_attribute
         { Pstr_attribute $1 }
+    | module_binding
+        { $1 }
     )
   | wrap_mkstr_ext(
       primitive_declaration
@@ -1227,8 +1229,6 @@ structure_item:
         { pstr_typext $1 }
     | str_exception_declaration
         { pstr_exception $1 }
-    | module_binding
-        { $1 }
     | rec_module_bindings
         { pstr_recmodule $1 }
     | module_type_declaration
@@ -1248,15 +1248,14 @@ structure_item:
 (* A single module binding. *)
 %inline module_binding:
   MODULE
-  ext = ext attrs1 = attributes
+  ext = ext attrs_ext = attributes
   name = mkrhs(module_name)
   body = module_binding_body
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
     { let docs = symbol_docs $sloc in
       let loc = make_loc $sloc in
-      let attrs = attrs1 @ attrs2 in
-      let body = Mb.mk name body ~attrs ~loc ~docs in
-      Pstr_module body, ext }
+      let body = Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs in
+      Pstr_module body }
 ;
 
 (* The body (right-hand side) of a module binding. *)
@@ -1282,33 +1281,31 @@ module_binding_body:
 %inline rec_module_binding:
   MODULE
   ext = ext
-  attrs1 = attributes
+  attrs_ext = attributes
   REC
   name = mkrhs(module_name)
   body = module_binding_body
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
     let loc = make_loc $sloc in
-    let attrs = attrs1 @ attrs2 in
     let docs = symbol_docs $sloc in
     ext,
-    Mb.mk name body ~attrs ~loc ~docs
+    Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs
   }
 ;
 
 (* The following bindings in a group of recursive module bindings. *)
 %inline and_module_binding:
   AND
-  attrs1 = attributes
+  attrs_ext = attributes
   name = mkrhs(module_name)
   body = module_binding_body
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
     let loc = make_loc $sloc in
-    let attrs = attrs1 @ attrs2 in
     let docs = symbol_docs $sloc in
     let text = symbol_text $symbolstartpos in
-    Mb.mk name body ~attrs ~loc ~text ~docs
+    Mb.mk name body ~attrs_ext ~attrs_end ~loc ~text ~docs
   }
 ;
 
@@ -1336,15 +1333,14 @@ module_binding_body:
 module_type_declaration:
   MODULE TYPE
   ext = ext
-  attrs1 = attributes
+  attrs_ext = attributes
   id = mkrhs(ident)
   typ = preceded(EQUAL, module_type)?
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Mtd.mk id ?typ ~attrs ~loc ~docs, ext
+    Mtd.mk id ?typ ?ext ~attrs_ext ~attrs_end ~loc ~docs, ext
   }
 ;
 
@@ -1446,6 +1442,8 @@ signature_item:
   | mksig(
       floating_attribute
         { Psig_attribute $1 }
+    | rec_module_declarations
+      { Psig_recmodule $1}
     )
     { $1 }
   | wrap_mksig_ext(
@@ -1467,8 +1465,6 @@ signature_item:
         { let (body, ext) = $1 in (Psig_module body, ext) }
     | module_subst
         { let (body, ext) = $1 in (Psig_modsubst body, ext) }
-    | rec_module_declarations
-        { let (ext, l) = $1 in (Psig_recmodule l, ext) }
     | module_type_declaration
         { let (body, ext) = $1 in (Psig_modtype body, ext) }
     | module_type_subst
@@ -1487,14 +1483,14 @@ signature_item:
 (* A module declaration. *)
 %inline module_declaration:
   MODULE
-  ext = ext attrs_start = attributes
+  ext = ext attrs_ext = attributes
   name = mkrhs(module_name)
   body = module_declaration_body
   attrs_end = post_item_attributes
   {
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Md.mk name body ~attrs_start ~attrs_end ~loc ~docs, ext
+    Md.mk name body ~attrs_ext ~attrs_end ~loc ~docs, ext
   }
 ;
 
@@ -1513,7 +1509,7 @@ module_declaration_body:
 (* A module alias declaration (in a signature). *)
 %inline module_alias:
   MODULE
-  ext = ext attrs_start = attributes
+  ext = ext attrs_ext = attributes
   name = mkrhs(module_name)
   EQUAL
   body = module_expr_alias
@@ -1521,7 +1517,7 @@ module_declaration_body:
   {
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Md.mk name body ~attrs_start ~attrs_end ~loc ~docs, ext
+    Md.mk name body ~attrs_ext ~attrs_end ~loc ~docs, ext
   }
 ;
 %inline module_expr_alias:
@@ -1531,7 +1527,7 @@ module_declaration_body:
 (* A module substitution (in a signature). *)
 module_subst:
   MODULE
-  ext = ext attrs_start = attributes
+  ext = ext attrs_ext = attributes
   uid = mkrhs(UIDENT)
   COLONEQUAL
   body = mkrhs(mod_ext_longident)
@@ -1539,19 +1535,19 @@ module_subst:
   {
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Ms.mk uid body ~attrs_start ~attrs_end ~loc ~docs, ext
+    Ms.mk uid body ~attrs_ext ~attrs_end ~loc ~docs, ext
   }
 ;
 
 (* A group of recursive module declarations. *)
 %inline rec_module_declarations:
-  xlist(rec_module_declaration, and_module_declaration)
-    { $1 }
+  rec_module_declaration list(and_module_declaration)
+    { $1 :: $2 }
 ;
 %inline rec_module_declaration:
   MODULE
   ext = ext
-  attrs_start = attributes
+  attrs_ext = attributes
   REC
   name = mkrhs(module_name)
   COLON
@@ -1560,12 +1556,12 @@ module_subst:
   {
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    ext, Md.mk name mty ~attrs_start ~attrs_end ~loc ~docs
+    Md.mk name mty ?ext ~attrs_ext ~attrs_end ~loc ~docs
   }
 ;
 %inline and_module_declaration:
   AND
-  attrs_start = attributes
+  attrs_ext = attributes
   name = mkrhs(module_name)
   COLON
   mty = module_type
@@ -1574,7 +1570,7 @@ module_subst:
     let docs = symbol_docs $sloc in
     let loc = make_loc $sloc in
     let text = symbol_text $symbolstartpos in
-    Md.mk name mty ~attrs_start ~attrs_end ~loc ~text ~docs
+    Md.mk name mty ~attrs_ext ~attrs_end ~loc ~text ~docs
   }
 ;
 
@@ -1582,16 +1578,15 @@ module_subst:
 module_type_subst:
   MODULE TYPE
   ext = ext
-  attrs1 = attributes
+  attrs_ext = attributes
   id = mkrhs(ident)
   COLONEQUAL
   typ=module_type
-  attrs2 = post_item_attributes
+  attrs_end = post_item_attributes
   {
-    let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    Mtd.mk id ~typ ~attrs ~loc ~docs, ext
+    Mtd.mk id ~typ ?ext ~attrs_ext ~attrs_end ~loc ~docs, ext
   }
 
 

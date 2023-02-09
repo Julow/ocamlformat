@@ -335,29 +335,30 @@ module Str:
 (** Module declarations *)
 module Md:
   sig
-    val mk: ?loc:loc -> ?attrs_start:attrs -> ?attrs_end:attrs -> ?docs:docs -> 
+    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs  -> ?attrs_end:attrs -> ?docs:docs -> 
       ?text:text -> str_opt -> module_type -> module_declaration
   end
 
 (** Module substitutions *)
 module Ms:
   sig
-    val mk: ?loc:loc -> ?attrs_start:attrs -> ?attrs_end:attrs -> ?docs:docs -> 
+    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs -> ?attrs_end:attrs -> ?docs:docs -> 
       ?text:text -> str -> lid -> module_substitution
   end
 
 (** Module type declarations *)
 module Mtd:
   sig
-    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> ?text:text ->
-      ?typ:module_type -> str -> module_type_declaration
+    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs  -> ?attrs_end:attrs -> 
+      ?docs:docs -> ?text:text -> ?typ:module_type -> str -> 
+      module_type_declaration
   end
 
 (** Module bindings *)
 module Mb:
   sig
-    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> ?text:text ->
-      str_opt -> module_expr -> module_binding
+    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs  -> ?attrs_end:attrs -> 
+      ?docs:docs -> ?text:text -> str_opt -> module_expr -> module_binding
   end
 
 (** Opens *)

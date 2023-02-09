@@ -831,7 +831,11 @@ and signature_item i ppf x =
         fmt_string_loc pms.pms_name
         fmt_longident_loc pms.pms_manifest;
       fmt_location ppf pms.pms_loc;
-      attributes i ppf pms.pms_attributes_start;
+      let ext, ext_attrs = pms.pms_ext_attributes in
+      option (i + 1)
+        (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
+        ppf ext;
+      attributes i ppf ext_attrs;
       attributes i ppf pms.pms_attributes_end;
   | Psig_recmodule decls ->
       line i ppf "Psig_recmodule\n";
@@ -985,20 +989,35 @@ and structure_item i ppf x =
 and module_type_declaration i ppf x =
   line i ppf "module_type_declaration %a %a\n" fmt_string_loc x.pmtd_name
     fmt_location x.pmtd_loc;
-  attributes i ppf x.pmtd_attributes;
+  let ext, ext_attrs = x.pmtd_ext_attributes in
+  option (i + 1) 
+    (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
+    ppf ext;
+  attributes i ppf ext_attrs;
+  attributes i ppf x.pmtd_attributes_end;
   modtype_declaration (i+1) ppf x.pmtd_type
 
 and module_declaration i ppf pmd =
   line i ppf "module_declaration %a %a\n" fmt_str_opt_loc pmd.pmd_name
     fmt_location pmd.pmd_loc;
-  attributes i ppf pmd.pmd_attributes_start;
+  let ext, ext_attrs = pmd.pmd_ext_attributes in
+  option (i + 1) 
+    (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
+    ppf ext;
+    attributes i ppf ext_attrs;
+  attributes i ppf ext_attrs;
   attributes i ppf pmd.pmd_attributes_end;
   module_type (i+1) ppf pmd.pmd_type;
 
 and module_binding i ppf x =
   line i ppf "module_binding %a %a\n" fmt_str_opt_loc x.pmb_name
     fmt_location x.pmb_loc;
-  attributes i ppf x.pmb_attributes;
+  let ext, ext_attrs = x.pmb_ext_attributes in
+  option (i + 1) 
+    (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
+    ppf ext;
+  attributes i ppf ext_attrs;
+  attributes i ppf x.pmb_attributes_end;
   module_expr (i+1) ppf x.pmb_expr
 
 and core_type_x_core_type_x_location i ppf (ct1, ct2, l) =

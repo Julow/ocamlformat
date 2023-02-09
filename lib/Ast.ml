@@ -306,27 +306,36 @@ module Structure_item = struct
   let has_doc itm =
     match itm.pstr_desc with
     | Pstr_attribute atr -> Attr.is_doc atr
+    (* one attribute list *)
     | Pstr_eval (_, atrs)
      |Pstr_value {lbs_bindings= {lb_attributes= atrs; _} :: _; _}
      |Pstr_primitive {pval_attributes= atrs; _}
      |Pstr_type (_, {ptype_attributes= atrs; _} :: _)
      |Pstr_typext {ptyext_attributes= atrs; _}
      |Pstr_recmodule ({pmb_expr= {pmod_attributes= atrs; _}; _} :: _)
-     |Pstr_modtype {pmtd_attributes= atrs; _}
      |Pstr_open {popen_attributes= atrs; _}
      |Pstr_extension (_, atrs)
      |Pstr_class_type ({pci_attributes= atrs; _} :: _)
      |Pstr_class ({pci_attributes= atrs; _} :: _) ->
         List.exists ~f:Attr.is_doc atrs
-    | Pstr_include
-        {pincl_mod= {pmod_attributes= atrs1; _}; pincl_attributes= atrs2; _}
-     |Pstr_exception
+    (* two attribute lists *)
+    | Pstr_exception
         { ptyexn_attributes= atrs1
         ; ptyexn_constructor= {pext_attributes= atrs2; _}
         ; _ }
-     |Pstr_module
-        {pmb_attributes= atrs1; pmb_expr= {pmod_attributes= atrs2; _}; _} ->
+     |Pstr_modtype
+        {pmtd_ext_attributes= _, atrs1; pmtd_attributes_end= atrs2; _}
+     |Pstr_include
+        {pincl_mod= {pmod_attributes= atrs1; _}; pincl_attributes= atrs2; _}
+      ->
         List.exists ~f:Attr.is_doc atrs1 || List.exists ~f:Attr.is_doc atrs2
+    (* three attribute lists *)
+    | Pstr_module
+        { pmb_ext_attributes= _, atrs1
+        ; pmb_attributes_end= atrs2
+        ; pmb_expr= {pmod_attributes= atrs3; _}
+        ; _ } ->
+        List.exists ~f:(List.exists ~f:Attr.is_doc) [atrs1; atrs2; atrs3]
     | Pstr_value {lbs_bindings= []; _}
      |Pstr_type (_, [])
      |Pstr_recmodule []
@@ -397,19 +406,23 @@ module Signature_item = struct
   let has_doc itm =
     match itm.psig_desc with
     | Psig_attribute atr -> Attr.is_doc atr
+    (* one attribute list *)
     | Psig_value {pval_attributes= atrs; _}
      |Psig_type (_, {ptype_attributes= atrs; _} :: _)
      |Psig_typesubst ({ptype_attributes= atrs; _} :: _)
      |Psig_typext {ptyext_attributes= atrs; _}
-     |Psig_modtype {pmtd_attributes= atrs; _}
-     |Psig_modtypesubst {pmtd_attributes= atrs; _}
      |Psig_open {popen_attributes= atrs; _}
      |Psig_extension (_, atrs)
      |Psig_class_type ({pci_attributes= atrs; _} :: _)
      |Psig_class ({pci_attributes= atrs; _} :: _) ->
         List.exists ~f:Attr.is_doc atrs
-    | Psig_modsubst
-        {pms_attributes_start= atrs1; pms_attributes_end= atrs2; _}
+    (* two attribute list *)
+    | Psig_modtype
+        {pmtd_ext_attributes= _, atrs1; pmtd_attributes_end= atrs2; _}
+     |Psig_modtypesubst
+        {pmtd_ext_attributes= _, atrs1; pmtd_attributes_end= atrs2; _}
+     |Psig_modsubst
+        {pms_ext_attributes= _, atrs1; pms_attributes_end= atrs2; _}
      |Psig_include
         {pincl_mod= {pmty_attributes= atrs1; _}; pincl_attributes= atrs2; _}
      |Psig_exception
@@ -419,12 +432,12 @@ module Signature_item = struct
         List.exists ~f:Attr.is_doc atrs1 || List.exists ~f:Attr.is_doc atrs2
     | Psig_recmodule
         ( { pmd_type= {pmty_attributes= atrs1; _}
-          ; pmd_attributes_start= atrs2
+          ; pmd_ext_attributes= _, atrs2
           ; pmd_attributes_end= atrs3
           ; _ }
         :: _ )
      |Psig_module
-        { pmd_attributes_start= atrs1
+        { pmd_ext_attributes= _, atrs1
         ; pmd_attributes_end= atrs2
         ; pmd_type= {pmty_attributes= atrs3; _}
         ; _ } ->
@@ -503,7 +516,9 @@ module Lb = struct
 end
 
 module Mb = struct
-  let has_doc itm = List.exists ~f:Attr.is_doc itm.pmb_attributes
+  let has_doc itm =
+    List.exists ~f:Attr.is_doc
+      (snd itm.pmb_ext_attributes @ itm.pmb_attributes_end)
 
   let is_simple (i, (c : Conf.t)) =
     Poly.(c.fmt_opts.module_item_spacing.v = `Compact)
@@ -519,7 +534,7 @@ end
 module Md = struct
   let has_doc itm =
     List.exists ~f:Attr.is_doc
-      (itm.pmd_attributes_start @ itm.pmd_attributes_end)
+      (snd itm.pmd_ext_attributes @ itm.pmd_attributes_end)
 
   let is_simple (i, (c : Conf.t)) =
     Poly.(c.fmt_opts.module_item_spacing.v = `Compact)
@@ -672,8 +687,8 @@ let attributes = function
   | Pat x -> x.ppat_attributes
   | Exp x -> x.pexp_attributes
   | Lb x -> x.lb_attributes
-  | Mb x -> x.pmb_attributes
-  | Md x -> x.pmd_attributes_start @ x.pmd_attributes_end
+  | Mb x -> snd x.pmb_ext_attributes @ x.pmb_attributes_end
+  | Md x -> snd x.pmd_ext_attributes @ x.pmd_attributes_end
   | Cl x -> x.pcl_attributes
   | Mty x -> x.pmty_attributes
   | Mod x -> x.pmod_attributes

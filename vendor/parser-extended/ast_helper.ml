@@ -365,12 +365,12 @@ module Val = struct
 end
 
 module Md = struct
-  let mk ?(loc = !default_loc) ?(attrs_start = []) ?(attrs_end = [])
+  let mk ?(loc = !default_loc) ?ext ?(attrs_ext = []) ?(attrs_end = [])
         ?(docs = empty_docs) ?(text = []) name typ =
     {
      pmd_name = name;
      pmd_type = typ;
-     pmd_attributes_start = attrs_start;
+     pmd_ext_attributes = (ext, attrs_ext);
      pmd_attributes_end =
        add_text_attrs text (add_docs_attrs docs attrs_end);
      pmd_loc = loc;
@@ -378,12 +378,12 @@ module Md = struct
 end
 
 module Ms = struct
-  let mk ?(loc = !default_loc) ?(attrs_start = []) ?(attrs_end = [])
+  let mk ?(loc = !default_loc) ?ext ?(attrs_ext = []) ?(attrs_end = [])
         ?(docs = empty_docs) ?(text = []) name syn =
     {
      pms_name = name;
      pms_manifest = syn;
-     pms_attributes_start=attrs_start;
+     pms_ext_attributes= (ext, attrs_ext);
      pms_attributes_end =
        add_text_attrs text (add_docs_attrs docs attrs_end);
      pms_loc = loc;
@@ -391,25 +391,27 @@ module Ms = struct
 end
 
 module Mtd = struct
-  let mk ?(loc = !default_loc) ?(attrs = [])
+  let mk ?(loc = !default_loc) ?ext ?(attrs_ext = [])  ?(attrs_end = [])
         ?(docs = empty_docs) ?(text = []) ?typ name =
     {
      pmtd_name = name;
      pmtd_type = typ;
-     pmtd_attributes =
-       add_text_attrs text (add_docs_attrs docs attrs);
+     pmtd_ext_attributes= (ext, attrs_ext);
+     pmtd_attributes_end =
+       add_text_attrs text (add_docs_attrs docs attrs_end);
      pmtd_loc = loc;
     }
 end
 
 module Mb = struct
-  let mk ?(loc = !default_loc) ?(attrs = [])
+  let mk ?(loc = !default_loc) ?ext ?(attrs_ext = [])  ?(attrs_end = [])
         ?(docs = empty_docs) ?(text = []) name expr =
     {
      pmb_name = name;
      pmb_expr = expr;
-     pmb_attributes =
-       add_text_attrs text (add_docs_attrs docs attrs);
+     pmb_ext_attributes = ext, attrs_ext;
+     pmb_attributes_end =
+       add_text_attrs text (add_docs_attrs docs attrs_end);
      pmb_loc = loc;
     }
 end

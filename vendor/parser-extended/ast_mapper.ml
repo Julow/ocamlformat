@@ -753,43 +753,54 @@ let default_mapper =
 
     module_declaration =
       (fun this
-         {pmd_name; pmd_type; pmd_attributes_start; pmd_attributes_end; pmd_loc} ->
+         {pmd_name; pmd_type; pmd_ext_attributes=(ext, ext_attrs); 
+          pmd_attributes_end; pmd_loc} ->
          Md.mk
            (map_loc this pmd_name)
            (this.module_type this pmd_type)
-           ~attrs_start:(this.attributes this pmd_attributes_start)
+           ?ext
+           ~attrs_ext:(this.attributes this ext_attrs)
            ~attrs_end:(this.attributes this pmd_attributes_end)
            ~loc:(this.location this pmd_loc)
       );
 
     module_substitution =
       (fun this 
-         { pms_name; pms_manifest; pms_attributes_start; pms_attributes_end; 
+         { pms_name; pms_manifest; pms_ext_attributes=(ext, ext_attrs); 
+           pms_attributes_end; 
            pms_loc } ->
          Ms.mk
            (map_loc this pms_name)
            (map_loc this pms_manifest)
-           ~attrs_start:(this.attributes this pms_attributes_start)
+           ?ext
+           ~attrs_ext:(this.attributes this ext_attrs)
            ~attrs_end:(this.attributes this pms_attributes_end)
            ~loc:(this.location this pms_loc)
       );
 
     module_type_declaration =
-      (fun this {pmtd_name; pmtd_type; pmtd_attributes; pmtd_loc} ->
+      (fun this {pmtd_name; pmtd_type; pmtd_ext_attributes=(ext, ext_attrs); 
+                 pmtd_attributes_end; pmtd_loc} ->
          Mtd.mk
            (map_loc this pmtd_name)
            ?typ:(map_opt (this.module_type this) pmtd_type)
-           ~attrs:(this.attributes this pmtd_attributes)
+           ?ext
+           ~attrs_ext:(this.attributes this ext_attrs)
+           ~attrs_end:(this.attributes this pmtd_attributes_end)
            ~loc:(this.location this pmtd_loc)
       );
 
     module_binding =
-      (fun this {pmb_name; pmb_expr; pmb_attributes; pmb_loc} ->
-         Mb.mk (map_loc this pmb_name) (this.module_expr this pmb_expr)
-           ~attrs:(this.attributes this pmb_attributes)
+      (fun this {pmb_name; pmb_expr; pmb_ext_attributes=(ext, ext_attrs); 
+                 pmb_attributes_end; pmb_loc} ->
+         Mb.mk 
+           (map_loc this pmb_name) 
+           (this.module_expr this pmb_expr)
+           ?ext
+           ~attrs_ext:(this.attributes this ext_attrs) 
+           ~attrs_end:(this.attributes this pmb_attributes_end)
            ~loc:(this.location this pmb_loc)
       );
-
 
     open_declaration =
       (fun this {popen_expr; popen_override; popen_attributes; popen_loc} ->
