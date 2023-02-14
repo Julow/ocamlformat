@@ -181,8 +181,8 @@ let update_config_maybe_disabled c loc l f =
   maybe_disabled c loc l f
 
 let update_config_maybe_disabled_attrs c loc attrs f =
-    let l = attrs.attrs_before @ attrs.attrs_after in
-    maybe_disabled c loc l f
+  let l = attrs.attrs_before @ attrs.attrs_after in
+  maybe_disabled c loc l f
 
 let update_config_maybe_disabled_block c loc l f =
   let fmt bdy = {empty with opn= open_vbox 2; bdy; cls= close_box} in
@@ -413,20 +413,24 @@ let docstring_epi ~standalone ~next ~epi ~floating =
       str "\n" $ epi
   | _ -> epi
 
-let fmt_docstring c ?(standalone = false) ?pro ?epi doc =
-  list_pn (Option.value ~default:[] doc)
+let fmt_docstring' c ?(standalone = false) ?pro ?epi doc =
+  list_pn doc
     (fun ~prev:_ ({txt; loc}, floating) ~next ->
       let epi = docstring_epi ~standalone ~next ~epi ~floating in
       fmt_parsed_docstring c ~loc ?pro ~epi txt (Docstring.parse ~loc txt) )
 
+let fmt_docstring c ?standalone ?pro ?epi doc =
+  fmt_docstring' c ?standalone ?pro ?epi (Option.value ~default:[] doc)
+
+(** Accept up to two docstrings, in reverse order of appearance. *)
 let fmt_docstring_around_item' ?(is_val = false) ?(force_before = false)
-    ?(fit = false) c doc1 doc2 =
-  match (doc1, doc2) with
-  | Some _, Some _ ->
-      ( fmt_docstring c ~epi:(fmt "@\n") doc1
-      , fmt_docstring c ~pro:(fmt "@\n") doc2 )
-  | None, None -> (noop, noop)
-  | None, Some doc | Some doc, None -> (
+    ?(fit = false) c docs =
+  match docs with
+  | doc2 :: doc1 :: _ ->
+      ( fmt_docstring' c ~epi:(fmt "@\n") doc1
+      , fmt_docstring' c ~pro:(fmt "@\n") doc2 )
+  | [] -> (noop, noop)
+  | [ doc ] -> (
       let is_tag_only =
         List.for_all ~f:(function
           | Ok es, _ -> Docstring.is_tag_only es
@@ -469,21 +473,36 @@ let fmt_docstring_around_item' ?(is_val = false) ?(force_before = false)
           , fmt_doc ~pro:(break c.conf.fmt_opts.doc_comments_padding.v 0) doc
           ) )
 
+(** There can be up to two doc comments. *)
+let extract_doc_attrs acc attrs =
+  if List.length acc >= 2 then acc, attrs
+  else
+    let doc, attrs = doc_atrs attrs in
+    let acc = match doc with Some doc -> doc :: acc | None -> acc in
+    acc, attrs
+
 (** Formats docstrings and decides where to place them Handles the
     [doc-comments] and [doc-comment-tag-only] options Returns the tuple
     [doc_before, doc_after, attrs] *)
 let fmt_docstring_around_item ?is_val ?force_before ?fit c attrs =
-  let doc1, attrs = doc_atrs attrs in
-  let doc2, attrs = doc_atrs attrs in
+  let docs, attrs = extract_doc_attrs [] attrs in
+  let docs, attrs = extract_doc_attrs docs attrs in
   let doc_before, doc_after =
-    fmt_docstring_around_item' ?is_val ?force_before ?fit c doc1 doc2
+    fmt_docstring_around_item' ?is_val ?force_before ?fit c docs
   in
   (doc_before, doc_after, attrs)
 
+(** There can be upto 2 doc comments attached to an item but whether they are
+    in [attrs_before] or [attrs_after] is undefined. *)
 let fmt_docstring_around_item_attrs ?is_val ?force_before ?fit c attrs =
-  let (doc_before, doc_after, attrs_before) = fmt_docstring_around_item_attrs ?is_val ?force_before ?fit c attrs.attrs_before in
-  let (doc_before', doc_after', attrs_after) = fmt_docstring_around_item_attrs ?is_val ?force_before ?fit c attrs.attrs_before in
-  doc_before @ doc_before', doc_after @ doc_after', attrs_before, attrs_after
+  let docs, attrs_before = extract_doc_attrs [] attrs.attrs_before in
+  let docs, attrs_before = extract_doc_attrs docs attrs_before in
+  let docs, attrs_after = extract_doc_attrs docs attrs.attrs_after in
+  let docs, attrs_after = extract_doc_attrs docs attrs_after in
+  let doc_before, doc_after =
+    fmt_docstring_around_item' ?is_val ?force_before ?fit c docs
+  in
+  (doc_before, doc_after, attrs_before, attrs_after)
 
 let fmt_extension_suffix c ext =
   opt ext (fun name -> str "%" $ fmt_str_loc c name)
@@ -1357,7 +1376,7 @@ and fmt_label_arg ?(box = true) ?epi ?parens ?eol c
     when String.equal l i
          && List.is_empty arg.pexp_attributes
          && Ocaml_version.(
-              compare c.conf.opr_opts.ocaml_version.v Releases.v4_14_0 >= 0 )
+              compare c.conf.opr_opts.ocaml_version.v Releases.v4_14_0 >= 0)
     ->
       let lbl =
         match lbl with
@@ -2238,7 +2257,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
             c.conf
             ( hvbox 2
                 (fmt_module c ctx keyword ~eqty:":" name xargs (Some xbody)
-                   xmty ~attrs_ext:[] ~attrs_end:[] ~epi:(str "in")
+                   xmty ~attrs:[] ~epi:(str "in")
                    ~can_sparse ?ext ~rec_flag:false )
             $ fmt "@;<1000 0>"
             $ fmt_expression c (sub_exp ~ctx exp) )
@@ -2303,7 +2322,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
     when Poly.(
            c.conf.fmt_opts.single_case.v = `Compact
            && c.conf.fmt_opts.break_cases.v <> `All
-           && c.conf.fmt_opts.break_cases.v <> `Vertical ) ->
+           && c.conf.fmt_opts.break_cases.v <> `Vertical) ->
       (* side effects of Cmts.fmt_before before [fmt_pattern] is important *)
       let xpc_rhs = sub_exp ~ctx pc_rhs in
       let leading_cmt = Cmts.fmt_before c pc_lhs.ppat_loc in
@@ -3623,8 +3642,8 @@ and fmt_class_exprs ?ext c ctx cls =
          $ hovbox 0
            @@ Cmts.fmt c cl.pci_loc (doc_before $ class_exprs $ doc_after) )
 
-and fmt_module c ctx ?epi ?(can_sparse = false) keyword ?(eqty = "=")
-    name xargs xbody xmty ~attrs ~rec_flag =
+and fmt_module c ctx ?epi ?(can_sparse = false) keyword ?(eqty = "=") name
+    xargs xbody xmty ~attrs ~rec_flag =
   let arg_blks =
     List.map xargs ~f:(fun {loc; txt} ->
         let txt =
@@ -3682,8 +3701,8 @@ and fmt_module c ctx ?epi ?(can_sparse = false) keyword ?(eqty = "=")
   in
   let fmt_pro = opt blk_b.pro (fun pro -> fmt "@ " $ pro) in
   let doc_before, doc_after, attrs_before, attrs_after =
-    fmt_docstring_around_item_attrs c ~force_before:(not single_line) ~fit:true
-      attrs
+    fmt_docstring_around_item_attrs c ~force_before:(not single_line)
+      ~fit:true attrs
   in
   hvbox
     (if compact then 0 else 2)
@@ -3728,12 +3747,7 @@ and fmt_module c ctx ?epi ?(can_sparse = false) keyword ?(eqty = "=")
           $ epi ) )
 
 and fmt_module_declaration c ctx ~rec_flag ~first pmd =
-  let { pmd_name
-      ; pmd_type
-      ; pmd_ext_attrs = attrs
-      ; pmd_loc } =
-    pmd
-  in
+  let {pmd_name; pmd_type; pmd_ext_attrs= attrs; pmd_loc} = pmd in
   update_config_maybe_disabled_attrs c pmd_loc attrs
   @@ fun c ->
   let keyword = if first then "module" else "and" in
@@ -3749,12 +3763,7 @@ and fmt_module_declaration c ctx ~rec_flag ~first pmd =
        ~rec_flag:(rec_flag && first) ~attrs )
 
 and fmt_module_substitution c ctx pms =
-  let { pms_name
-      ; pms_manifest
-      ; pms_ext_attrs = attrs
-      ; pms_loc } =
-    pms
-  in
+  let {pms_name; pms_manifest; pms_ext_attrs= attrs; pms_loc} = pms in
   update_config_maybe_disabled_attrs c pms_loc attrs
   @@ fun c ->
   let xmty =
@@ -3766,16 +3775,11 @@ and fmt_module_substitution c ctx pms =
   in
   let pms_name = {pms_name with txt= Some pms_name.txt} in
   Cmts.fmt c pms_loc
-    (fmt_module c ctx "module" ~eqty:":=" pms_name [] None (Some xmty)
-       ~attrs ~rec_flag:false )
+    (fmt_module c ctx "module" ~eqty:":=" pms_name [] None (Some xmty) ~attrs
+       ~rec_flag:false )
 
 and fmt_module_type_declaration ?eqty c ctx pmtd =
-  let { pmtd_name
-      ; pmtd_type
-      ; pmtd_ext_attrs = attrs
-      ; pmtd_loc } =
-    pmtd
-  in
+  let {pmtd_name; pmtd_type; pmtd_ext_attrs= attrs; pmtd_loc} = pmtd in
   update_config_maybe_disabled_attrs c pmtd_loc attrs
   @@ fun c ->
   let pmtd_name = {pmtd_name with txt= Some pmtd_name.txt} in
@@ -4189,7 +4193,7 @@ and fmt_value_binding c ~rec_flag ?ext ?in_ ?epi ctx
   @@ fun c ->
   let lb_pun =
     Ocaml_version.(
-      compare c.conf.opr_opts.ocaml_version.v Releases.v4_13_0 >= 0 )
+      compare c.conf.opr_opts.ocaml_version.v Releases.v4_13_0 >= 0)
     && lb_pun
   in
   let doc1, atrs = doc_atrs lb_attrs in
@@ -4277,10 +4281,7 @@ and fmt_value_binding c ~rec_flag ?ext ?in_ ?epi ctx
   $ fmt_docstring c ~pro:(fmt "@\n") doc2
 
 and fmt_module_binding c ctx ~rec_flag ~first
-    ( { pmb_name
-      ; pmb_loc
-      ; pmb_ext_attrs = attrs
-      ; _ } as pmb ) =
+    ({pmb_name; pmb_loc; pmb_ext_attrs= attrs; _} as pmb) =
   update_config_maybe_disabled_attrs c pmb.pmb_loc attrs
   @@ fun c ->
   let keyword = if first then "module" else "and" in
