@@ -1266,7 +1266,7 @@ structure_item:
   ext = ext 
   before = attributes
   body = body
-  after = attributes
+  after = post_item_attributes
   { let ext_attrs = Attr.ext_attrs ~ext ~before ~after in 
     body ~ext_attrs }
 
@@ -1274,7 +1274,7 @@ structure_item:
 %inline ext_attrs_no_ext(body):
   before = attributes
   body = body
-  after = attributes
+  after = post_item_attributes
   { let ext_attrs = Attr.ext_attrs ~ext:None ~before ~after in 
     body ~ext_attrs }
 
@@ -1316,30 +1316,26 @@ module_binding_body:
 (* The first binding in a group of recursive module bindings. *)
 %inline rec_module_binding:
   MODULE ext_attrs(
-  ext = ext
-  attrs_ext = attributes
-  REC
-  name = mkrhs(module_name)
-  body = module_binding_body
-  attrs_end = post_item_attributes
-  { let loc = make_loc \$sloc in
-    let docs = symbol_docs \$sloc in
-    Mb.mk name body  }) { dollar2 }
+    REC
+    name = mkrhs(module_name)
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Mb.mk name body  }) 
+  { $2 }
 ;
 
 (* The following bindings in a group of recursive module bindings. *)
 %inline and_module_binding:
   AND
-  attrs_ext = attributes
-  name = mkrhs(module_name)
-  body = module_binding_body
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    let text = symbol_text $symbolstartpos in
-    Mb.mk name body ~attrs_ext ~attrs_end ~loc ~text ~docs
-  }
+  ext_attrs_no_ext(
+    name = mkrhs(module_name)
+    body = module_binding_body
+    { let loc = make_loc $sloc in
+      let docs = symbol_docs $sloc in
+      let text = symbol_text $symbolstartpos in
+      Mb.mk name body ~loc ~text ~docs
+    } )
+  { $2 }
 ;
 
 (* -------------------------------------------------------------------------- *)
@@ -1366,11 +1362,8 @@ module_binding_body:
 module_type_declaration:
   MODULE TYPE 
   ext_attrs(
-    ext = ext
-    attrs_ext = attributes
     id = mkrhs(ident)
     typ = preceded(EQUAL, module_type)?
-    attrs_end = post_item_attributes
     { let loc = make_loc \$sloc in
       let docs = symbol_docs \$sloc in
       Mtd.mk id ?typ  })
@@ -1590,8 +1583,8 @@ module_subst:
     name = mkrhs(module_name)
     COLON
     mty = module_type
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
+    { let loc = make_loc $sloc in
+      let docs = symbol_docs $sloc in
       Md.mk name mty  } ) 
   { $2 }
 ;
