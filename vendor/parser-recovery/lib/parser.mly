@@ -86,8 +86,6 @@ let pstr_exception (te, ext) =
   (Pstr_exception te, ext)
 let pstr_include (body, ext) =
   (Pstr_include body, ext)
-let pstr_recmodule (ext, bindings) =
-  (Pstr_recmodule bindings, ext)
 
 let psig_typext (te, ext) =
   (Psig_typext te, ext)
@@ -1217,6 +1215,8 @@ structure_item:
         { Pstr_attribute $1 }
     | module_binding
         { $1 }
+    | rec_module_bindings
+        { Pstr_recmodule $1 }
     )
   | wrap_mkstr_ext(
       primitive_declaration
@@ -1229,8 +1229,6 @@ structure_item:
         { pstr_typext $1 }
     | str_exception_declaration
         { pstr_exception $1 }
-    | rec_module_bindings
-        { pstr_recmodule $1 }
     | module_type_declaration
         { let (body, ext) = $1 in (Pstr_modtype body, ext) }
     | open_declaration
@@ -1273,8 +1271,8 @@ module_binding_body:
 
 (* A group of recursive module bindings. *)
 %inline rec_module_bindings:
-  xlist(rec_module_binding, and_module_binding)
-    { $1 }
+  rec_module_binding list(and_module_binding)
+    { $1 :: $2 }
 ;
 
 (* The first binding in a group of recursive module bindings. *)
@@ -1289,7 +1287,6 @@ module_binding_body:
   {
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    ext,
     Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs
   }
 ;
