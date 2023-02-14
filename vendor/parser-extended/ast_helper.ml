@@ -115,6 +115,8 @@ module Exp = struct
      pexp_loc = loc;
      pexp_loc_stack = [];
      pexp_attributes = attrs}
+  let ext_attrs ?ext ~before ~after =
+    {attrs_extension = ext; attrs_before = before; attrs_after = after }
   let attr d a = {d with pexp_attributes = d.pexp_attributes @ [a]}
 
   let ident ?loc ?attrs a = mk ?loc ?attrs (Pexp_ident a)

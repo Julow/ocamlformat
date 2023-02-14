@@ -1262,17 +1262,34 @@ structure_item:
     { $1 }
 ;
 
+%inline ext_attrs(body):
+  ext = ext 
+  before = attributes
+  body = body
+  after = attributes
+  { let ext_attrs = Attr.ext_attrs ~ext ~before ~after in 
+    body ~ext_attrs }
+
+
+%inline ext_attrs_no_ext(body):
+  before = attributes
+  body = body
+  after = attributes
+  { let ext_attrs = Attr.ext_attrs ~ext:None ~before ~after in 
+    body ~ext_attrs }
+
 (* A single module binding. *)
 %inline module_binding:
-  MODULE
-  ext = ext attrs_ext = attributes
-  name = mkrhs(module_name)
-  body = module_binding_body
-  attrs_end = post_item_attributes
+  MODULE 
+  ext_attrs(
+    name = mkrhs(module_name)
+    body = module_binding_body
     { let docs = symbol_docs $sloc in
       let loc = make_loc $sloc in
-      let body = Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs in
-      Pstr_module body }
+      let body = Mb.mk name body ~loc ~docs in
+      Pstr_module body })
+  { $2 }
+   
 ;
 
 (* The body (right-hand side) of a module binding. *)
@@ -1298,18 +1315,16 @@ module_binding_body:
 
 (* The first binding in a group of recursive module bindings. *)
 %inline rec_module_binding:
-  MODULE
+  MODULE ext_attrs(
   ext = ext
   attrs_ext = attributes
   REC
   name = mkrhs(module_name)
   body = module_binding_body
   attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  { let loc = make_loc \$sloc in
+    let docs = symbol_docs \$sloc in
+    Mb.mk name body  }) { dollar2 }
 ;
 
 (* The following bindings in a group of recursive module bindings. *)
@@ -1349,17 +1364,17 @@ module_binding_body:
 
 (* A module type declaration. *)
 module_type_declaration:
-  MODULE TYPE
-  ext = ext
-  attrs_ext = attributes
-  id = mkrhs(ident)
-  typ = preceded(EQUAL, module_type)?
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Mtd.mk id ?typ ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  MODULE TYPE 
+  ext_attrs(
+    ext = ext
+    attrs_ext = attributes
+    id = mkrhs(ident)
+    typ = preceded(EQUAL, module_type)?
+    attrs_end = post_item_attributes
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Mtd.mk id ?typ  })
+  { $3 }
 ;
 
 (* -------------------------------------------------------------------------- *)
@@ -1508,16 +1523,14 @@ signature_item:
 
 (* A module declaration. *)
 %inline module_declaration:
-  MODULE
-  ext = ext attrs_ext = attributes
-  name = mkrhs(module_name)
-  body = module_declaration_body
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Md.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  MODULE 
+  ext_attrs(
+    name = mkrhs(module_name)
+    body = module_declaration_body
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Md.mk name body  })
+  { $2 }
 ;
 
 (* The body (right-hand side) of a module declaration. *)
@@ -1536,17 +1549,15 @@ module_declaration_body:
 
 (* A module alias declaration (in a signature). *)
 %inline module_alias:
-  MODULE
-  ext = ext attrs_ext = attributes
-  name = mkrhs(module_name)
-  EQUAL
-  body = module_expr_alias
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Md.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  MODULE 
+  ext_attrs(
+    name = mkrhs(module_name)
+    EQUAL
+    body = module_expr_alias
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Md.mk name body  })
+  { $2 }
 ;
 %inline module_expr_alias:
   id = mkrhs(mod_longident)
@@ -1554,17 +1565,15 @@ module_declaration_body:
 ;
 (* A module substitution (in a signature). *)
 module_subst:
-  MODULE
-  ext = ext attrs_ext = attributes
-  uid = mkrhs(UIDENT)
-  COLONEQUAL
-  body = mkrhs(mod_ext_longident)
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Ms.mk uid body ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  MODULE 
+  ext_attrs(
+    uid = mkrhs(UIDENT)
+    COLONEQUAL
+    body = mkrhs(mod_ext_longident)
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Ms.mk uid body })
+  { $2 }
 | MODULE ext attributes mkrhs(UIDENT) COLONEQUAL error
     { expecting $loc($6) "module path" }
 ;
@@ -1575,49 +1584,43 @@ module_subst:
     { $1 :: $2 }
 ;
 %inline rec_module_declaration:
-  MODULE
-  ext = ext
-  attrs_ext = attributes
-  REC
-  name = mkrhs(module_name)
-  COLON
-  mty = module_type
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Md.mk name mty ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  MODULE 
+  ext_attrs(
+    REC
+    name = mkrhs(module_name)
+    COLON
+    mty = module_type
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Md.mk name mty  } ) 
+  { $2 }
 ;
 %inline and_module_declaration:
   AND
-  attrs_ext = attributes
-  name = mkrhs(module_name)
-  COLON
-  mty = module_type
-  attrs_end = post_item_attributes
-  {
-    let docs = symbol_docs $sloc in
-    let loc = make_loc $sloc in
-    let text = symbol_text $symbolstartpos in
-    Md.mk name mty ~attrs_ext ~attrs_end ~loc ~text ~docs
-  }
+  ext_attrs_no_ext(
+    name = mkrhs(module_name)
+    COLON
+    mty = module_type
+    {
+      let docs = symbol_docs $sloc in
+      let loc = make_loc $sloc in
+      let text = symbol_text $symbolstartpos in
+      Md.mk name mty ~loc ~text ~docs
+    } )
+  { $2 }
 ;
 
 (* A module type substitution *)
 module_type_subst:
-  MODULE TYPE
-  ext = ext
-  attrs_ext = attributes
-  id = mkrhs(ident)
-  COLONEQUAL
-  typ=module_type
-  attrs_end = post_item_attributes
-  {
-    let loc = make_loc $sloc in
-    let docs = symbol_docs $sloc in
-    Mtd.mk id ~typ ?ext ~attrs_ext ~attrs_end ~loc ~docs
-  }
+  MODULE TYPE 
+  ext_attrs(
+    id = mkrhs(ident)
+    COLONEQUAL
+    typ=module_type
+    { let loc = make_loc \$sloc in
+      let docs = symbol_docs \$sloc in
+      Mtd.mk id ~typ } )
+  { $2 }
 
 
 (* -------------------------------------------------------------------------- *)

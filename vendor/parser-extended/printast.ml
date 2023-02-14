@@ -543,7 +543,15 @@ and attributes i ppf l =
     line i ppf "attribute %a %a\n" fmt_string_loc a.attr_name
       fmt_location a.attr_loc;
     payload (i + 1) ppf a.attr_payload;
-  ) l;
+  ) l
+
+and ext_attrs i ppf attrs =
+        let ext, ext_attrs = pms.pms_ext_attributes in
+              option (i + 1)
+                      (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
+                              ppf ext;
+                                    attributes i ppf ext_attrs;
+                                          attributes i ppf pms.pms_attributes_end;
 
 and payload i ppf = function
   | PStr x -> structure i ppf x
@@ -831,12 +839,7 @@ and signature_item i ppf x =
         fmt_string_loc pms.pms_name
         fmt_longident_loc pms.pms_manifest;
       fmt_location ppf pms.pms_loc;
-      let ext, ext_attrs = pms.pms_ext_attributes in
-      option (i + 1)
-        (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
-        ppf ext;
-      attributes i ppf ext_attrs;
-      attributes i ppf pms.pms_attributes_end;
+      ext_attrs i ppf pms.pms_ext_attrs;
   | Psig_recmodule decls ->
       line i ppf "Psig_recmodule\n";
       list i module_declaration ppf decls;

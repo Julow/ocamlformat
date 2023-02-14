@@ -180,6 +180,10 @@ let update_config_maybe_disabled c loc l f =
   let c = update_config c l in
   maybe_disabled c loc l f
 
+let update_config_maybe_disabled_attrs c loc attrs f =
+    let l = attrs.attrs_before @ attrs.attrs_after in
+    maybe_disabled c loc l f
+
 let update_config_maybe_disabled_block c loc l f =
   let fmt bdy = {empty with opn= open_vbox 2; bdy; cls= close_box} in
   let c = update_config c l in
@@ -475,6 +479,11 @@ let fmt_docstring_around_item ?is_val ?force_before ?fit c attrs =
     fmt_docstring_around_item' ?is_val ?force_before ?fit c doc1 doc2
   in
   (doc_before, doc_after, attrs)
+
+let fmt_docstring_around_item_attrs ?is_val ?force_before ?fit c attrs =
+  let (doc_before, doc_after, attrs_before) = fmt_docstring_around_item_attrs ?is_val ?force_before ?fit c attrs.attrs_before in
+  let (doc_before', doc_after', attrs_after) = fmt_docstring_around_item_attrs ?is_val ?force_before ?fit c attrs.attrs_before in
+  doc_before @ doc_before', doc_after @ doc_after', attrs_before, attrs_after
 
 let fmt_extension_suffix c ext =
   opt ext (fun name -> str "%" $ fmt_str_loc c name)
@@ -3614,8 +3623,8 @@ and fmt_class_exprs ?ext c ctx cls =
          $ hovbox 0
            @@ Cmts.fmt c cl.pci_loc (doc_before $ class_exprs $ doc_after) )
 
-and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
-    name xargs xbody xmty ~attrs_end ~attrs_ext ~rec_flag =
+and fmt_module c ctx ?epi ?(can_sparse = false) keyword ?(eqty = "=")
+    name xargs xbody xmty ~attrs ~rec_flag =
   let arg_blks =
     List.map xargs ~f:(fun {loc; txt} ->
         let txt =
@@ -3672,12 +3681,10 @@ and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
     Poly.(c.conf.fmt_opts.let_module.v = `Compact) || not can_sparse
   in
   let fmt_pro = opt blk_b.pro (fun pro -> fmt "@ " $ pro) in
-  let doc_before, doc_after, _atrs =
-    fmt_docstring_around_item c ~force_before:(not single_line) ~fit:true
-      (attrs_ext @ attrs_end)
+  let doc_before, doc_after, attrs_before, attrs_after =
+    fmt_docstring_around_item_attrs c ~force_before:(not single_line) ~fit:true
+      attrs
   in
-  let _, attrs_ext = doc_atrs attrs_ext
-  and _, attrs_end = doc_atrs attrs_end in
   hvbox
     (if compact then 0 else 2)
     ( doc_before
@@ -3694,8 +3701,8 @@ and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
                       | _ -> noop )
                     $ hvbox 4
                         ( str keyword
-                        $ fmt_extension_suffix c ext
-                        $ fmt_attributes c ~pre:(Break (1, 0)) attrs_ext
+                        $ fmt_extension_suffix c attrs.ext
+                        $ fmt_attributes c ~pre:(Break (1, 0)) attrs_before
                         $ fmt_if rec_flag " rec" $ str " "
                         $ fmt_str_loc_opt c name $ list_pn arg_blks fmt_arg
                         )
@@ -3709,7 +3716,7 @@ and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
         $ fmt_if (Option.is_none blk_b.pro && Option.is_some xbody) "@ "
         $ blk_b.bdy )
     $ blk_b.esp $ fmt_opt blk_b.epi
-    $ fmt_item_attributes c ~pre:(Break (1, 0)) attrs_end
+    $ fmt_item_attributes c ~pre:(Break (1, 0)) attrs_after
     $ doc_after
     $ opt epi (fun epi ->
           fmt_or_k compact
@@ -3723,14 +3730,12 @@ and fmt_module c ctx ?ext ?epi ?(can_sparse = false) keyword ?(eqty = "=")
 and fmt_module_declaration c ctx ~rec_flag ~first pmd =
   let { pmd_name
       ; pmd_type
-      ; pmd_ext_attributes= ext, attrs_ext
-      ; pmd_attributes_end= attrs_end
+      ; pmd_ext_attrs = attrs
       ; pmd_loc } =
     pmd
   in
-  update_config_maybe_disabled c pmd_loc (attrs_ext @ attrs_end)
+  update_config_maybe_disabled_attrs c pmd_loc attrs
   @@ fun c ->
-  let ext = if first then ext else None in
   let keyword = if first then "module" else "and" in
   let xargs, xmty =
     if rec_flag then ([], sub_mty ~ctx pmd_type)
@@ -3740,18 +3745,17 @@ and fmt_module_declaration c ctx ~rec_flag ~first pmd =
     match xmty.ast.pmty_desc with Pmty_alias _ -> None | _ -> Some ":"
   in
   Cmts.fmt c pmd_loc
-    (fmt_module ?ext c ctx keyword pmd_name xargs None ?eqty (Some xmty)
-       ~rec_flag:(rec_flag && first) ~attrs_ext ~attrs_end )
+    (fmt_module c ctx keyword pmd_name xargs None ?eqty (Some xmty)
+       ~rec_flag:(rec_flag && first) ~attrs )
 
 and fmt_module_substitution c ctx pms =
   let { pms_name
       ; pms_manifest
-      ; pms_ext_attributes= ext, attrs_ext
-      ; pms_attributes_end= attrs_end
+      ; pms_ext_attrs = attrs
       ; pms_loc } =
     pms
   in
-  update_config_maybe_disabled c pms_loc (attrs_ext @ attrs_end)
+  update_config_maybe_disabled_attrs c pms_loc attrs
   @@ fun c ->
   let xmty =
     (* TODO: improve *)
@@ -3762,23 +3766,22 @@ and fmt_module_substitution c ctx pms =
   in
   let pms_name = {pms_name with txt= Some pms_name.txt} in
   Cmts.fmt c pms_loc
-    (fmt_module ?ext c ctx "module" ~eqty:":=" pms_name [] None (Some xmty)
-       ~attrs_ext ~attrs_end ~rec_flag:false )
+    (fmt_module c ctx "module" ~eqty:":=" pms_name [] None (Some xmty)
+       ~attrs ~rec_flag:false )
 
 and fmt_module_type_declaration ?eqty c ctx pmtd =
   let { pmtd_name
       ; pmtd_type
-      ; pmtd_ext_attributes= ext, attrs_ext
-      ; pmtd_attributes_end= attrs_end
+      ; pmtd_ext_attrs = attrs
       ; pmtd_loc } =
     pmtd
   in
-  update_config_maybe_disabled c pmtd_loc (attrs_ext @ attrs_end)
+  update_config_maybe_disabled_attrs c pmtd_loc attrs
   @@ fun c ->
   let pmtd_name = {pmtd_name with txt= Some pmtd_name.txt} in
-  fmt_module ?ext ?eqty c ctx "module type" pmtd_name [] None ~rec_flag:false
+  fmt_module ?eqty c ctx "module type" pmtd_name [] None ~rec_flag:false
     (Option.map pmtd_type ~f:(sub_mty ~ctx))
-    ~attrs_ext ~attrs_end
+    ~attrs
 
 and fmt_open_description ?ext c ?(keyword = "open") ~kw_attributes
     {popen_expr= popen_lid; popen_override; popen_attributes; popen_loc} =
@@ -4276,12 +4279,10 @@ and fmt_value_binding c ~rec_flag ?ext ?in_ ?epi ctx
 and fmt_module_binding c ctx ~rec_flag ~first
     ( { pmb_name
       ; pmb_loc
-      ; pmb_ext_attributes= ext, attrs_ext
-      ; pmb_attributes_end= attrs_end
+      ; pmb_ext_attrs = attrs
       ; _ } as pmb ) =
-  update_config_maybe_disabled c pmb.pmb_loc (attrs_ext @ attrs_end)
+  update_config_maybe_disabled_attrs c pmb.pmb_loc attrs
   @@ fun c ->
-  let ext = if first then ext else None in
   let keyword = if first then "module" else "and" in
   let xargs, xbody =
     sugar_pmod_functor c ~for_functor_kw:false (sub_mod ~ctx pmb.pmb_expr)
@@ -4297,8 +4298,8 @@ and fmt_module_binding c ctx ~rec_flag ~first
     | _ -> (xbody, None)
   in
   Cmts.fmt c pmb_loc
-    (fmt_module ?ext c ctx keyword ~rec_flag:(rec_flag && first) ~eqty:":"
-       pmb_name xargs (Some xbody) xmty ~attrs_ext ~attrs_end )
+    (fmt_module c ctx keyword ~rec_flag:(rec_flag && first) ~eqty:":"
+       pmb_name xargs (Some xbody) xmty ~attrs )
 
 let fmt_toplevel_directive c ~semisemi dir =
   let fmt_dir_arg = function
