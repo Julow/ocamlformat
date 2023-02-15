@@ -1262,32 +1262,37 @@ structure_item:
     { $1 }
 ;
 
-%inline ext_attrs(body):
+%inline ext_attrs(kw, body):
+  kw
   ext = ext 
   before = attributes
   body = body
   after = post_item_attributes
-  { let ext_attrs = Attr.ext_attrs ~ext ~before ~after in 
-    body ~ext_attrs }
+  { let loc = make_loc $sloc in
+    let docs = symbol_docs $sloc in
+    let ext_attrs = Attr.ext_attrs ~ext ~before ~after in 
+    body ~loc ~ext_attrs ~docs }
 
 
 %inline ext_attrs_no_ext(body):
+  kw
   before = attributes
   body = body
   after = post_item_attributes
-  { let ext_attrs = Attr.ext_attrs ~ext:None ~before ~after in 
-    body ~ext_attrs }
+  { let loc = make_loc $sloc in
+    let docs = symbol_docs $sloc in
+    let text = symbol_text $symbolstartpos in
+    let ext_attrs = Attr.ext_attrs ~ext:None ~before ~after in 
+    body ~loc ~docs ~ext_attrs }
 
 (* A single module binding. *)
 %inline module_binding:
-  MODULE 
-  ext_attrs(
+  ext_attrs (
+    MODULE,
     name = mkrhs(module_name)
     body = module_binding_body
-    { let docs = symbol_docs $sloc in
-      let loc = make_loc $sloc in
-      let body = Mb.mk name body ~loc ~docs in
-      Pstr_module body })
+    { Mb.mk name body }
+  )
   { $2 }
    
 ;
@@ -1314,27 +1319,24 @@ module_binding_body:
 ;
 
 (* The first binding in a group of recursive module bindings. *)
-%inline rec_module_binding:
-  MODULE ext_attrs(
+%inline rec_module_binding: 
+  ext_attrs (
+    MODULE,
     REC
     name = mkrhs(module_name)
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
-      Mb.mk name body  }) 
+    { Mb.mk name body } 
+  ) 
   { $2 }
 ;
 
 (* The following bindings in a group of recursive module bindings. *)
 %inline and_module_binding:
-  AND
-  ext_attrs_no_ext(
+  ext_attrs_no_ext (
+    AND,
     name = mkrhs(module_name)
     body = module_binding_body
-    { let loc = make_loc $sloc in
-      let docs = symbol_docs $sloc in
-      let text = symbol_text $symbolstartpos in
-      Mb.mk name body ~loc ~text ~docs
-    } )
+    { Mb.mk name body }
+  )
   { $2 }
 ;
 
@@ -1359,14 +1361,13 @@ module_binding_body:
 ;
 
 (* A module type declaration. *)
-module_type_declaration:
-  MODULE TYPE 
-  ext_attrs(
+module_type_declaration: 
+  ext_attrs (
+    MODULE TYPE,
     id = mkrhs(ident)
     typ = preceded(EQUAL, module_type)?
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
-      Mtd.mk id ?typ  })
+    { Mtd.mk id ?typ }
+  )
   { $3 }
 ;
 
@@ -1516,13 +1517,12 @@ signature_item:
 
 (* A module declaration. *)
 %inline module_declaration:
-  MODULE 
-  ext_attrs(
+  ext_attrs (
+    MODULE,
     name = mkrhs(module_name)
     body = module_declaration_body
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
-      Md.mk name body  })
+    { Md.mk name body }
+  )
   { $2 }
 ;
 
@@ -1542,14 +1542,13 @@ module_declaration_body:
 
 (* A module alias declaration (in a signature). *)
 %inline module_alias:
-  MODULE 
-  ext_attrs(
+  ext_attrs (
+    MODULE,
     name = mkrhs(module_name)
     EQUAL
     body = module_expr_alias
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
-      Md.mk name body  })
+    { Md.mk name body  }
+  )
   { $2 }
 ;
 %inline module_expr_alias:
@@ -1558,14 +1557,13 @@ module_declaration_body:
 ;
 (* A module substitution (in a signature). *)
 module_subst:
-  MODULE 
-  ext_attrs(
+  ext_attrs (
+    MODULE,
     uid = mkrhs(UIDENT)
     COLONEQUAL
     body = mkrhs(mod_ext_longident)
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
-      Ms.mk uid body })
+    { Ms.mk uid body }
+  )
   { $2 }
 | MODULE ext attributes mkrhs(UIDENT) COLONEQUAL error
     { expecting $loc($6) "module path" }
@@ -1577,42 +1575,36 @@ module_subst:
     { $1 :: $2 }
 ;
 %inline rec_module_declaration:
-  MODULE 
-  ext_attrs(
+  ext_attrs (
+    MODULE,
     REC
     name = mkrhs(module_name)
     COLON
     mty = module_type
-    { let loc = make_loc $sloc in
-      let docs = symbol_docs $sloc in
-      Md.mk name mty  } ) 
+    { Md.mk name mty }
+  ) 
   { $2 }
 ;
 %inline and_module_declaration:
-  AND
-  ext_attrs_no_ext(
+  ext_attrs_no_ext (
+    AND,
     name = mkrhs(module_name)
     COLON
     mty = module_type
-    {
-      let docs = symbol_docs $sloc in
-      let loc = make_loc $sloc in
-      let text = symbol_text $symbolstartpos in
-      Md.mk name mty ~loc ~text ~docs
-    } )
+    { Md.mk name mty }
+  )
   { $2 }
 ;
 
 (* A module type substitution *)
 module_type_subst:
-  MODULE TYPE 
-  ext_attrs(
+  ext_attrs (
+    MODULE TYPE,
     id = mkrhs(ident)
     COLONEQUAL
     typ=module_type
-    { let loc = make_loc \$sloc in
-      let docs = symbol_docs \$sloc in
-      Mtd.mk id ~typ } )
+    { Mtd.mk id ~typ }
+  )
   { $2 }
 
 
