@@ -546,12 +546,11 @@ and attributes i ppf l =
   ) l
 
 and ext_attrs i ppf attrs =
-        let ext, ext_attrs = pms.pms_ext_attributes in
-              option (i + 1)
-                      (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
-                              ppf ext;
-                                    attributes i ppf ext_attrs;
-                                          attributes i ppf pms.pms_attributes_end;
+  option (i + 1)
+    (fun i ppf ext ->  line i ppf "extension %a\n" fmt_string_loc ext) 
+    ppf attrs.attrs_ext;
+  attributes i ppf attrs.attrs_before;
+  attributes i ppf pms.pms_attributes_end;
 
 and payload i ppf = function
   | PStr x -> structure i ppf x

@@ -60,7 +60,7 @@ end
 (** {1 Attributes} *)
 module Attr : sig
   val mk: ?loc:loc -> str -> payload -> attribute
-  val ext_attrs: ?ext:string with_loc -> before:attributes -> after:attributes -> ext_attrs
+  val ext_attrs: ?ext:string with_loc -> ?before:attributes -> ?after:attributes -> unit -> ext_attrs
 end
 
 (** {1 Core language} *)

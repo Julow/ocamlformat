@@ -766,39 +766,30 @@ let default_mapper =
 
     module_substitution =
       (fun this 
-         { pms_name; pms_manifest; pms_ext_attributes=(ext, ext_attrs); 
-           pms_attributes_end; 
+        { pms_name; pms_manifest; pmb_attrs; 
            pms_loc } ->
          Ms.mk
            (map_loc this pms_name)
            (map_loc this pms_manifest)
-           ?ext
-           ~attrs_ext:(this.attributes this ext_attrs)
-           ~attrs_end:(this.attributes this pms_attributes_end)
+           ~attrs:(this.ext_attrs this pms_attrs)
            ~loc:(this.location this pms_loc)
       );
 
     module_type_declaration =
-      (fun this {pmtd_name; pmtd_type; pmtd_ext_attributes=(ext, ext_attrs); 
-                 pmtd_attributes_end; pmtd_loc} ->
+      (fun this {pmtd_name; pmtd_type; pmtd_attrs; pmtd_loc} ->
          Mtd.mk
            (map_loc this pmtd_name)
            ?typ:(map_opt (this.module_type this) pmtd_type)
-           ?ext
-           ~attrs_ext:(this.attributes this ext_attrs)
-           ~attrs_end:(this.attributes this pmtd_attributes_end)
+           ~attrs:(this.ext_attrs this pmtd_attrs) 
            ~loc:(this.location this pmtd_loc)
       );
 
     module_binding =
-      (fun this {pmb_name; pmb_expr; pmb_ext_attributes=(ext, ext_attrs); 
-                 pmb_attributes_end; pmb_loc} ->
+      (fun this {pmb_name; pmb_expr; pmb_attrs; pmb_loc} ->
          Mb.mk 
            (map_loc this pmb_name) 
            (this.module_expr this pmb_expr)
-           ?ext
-           ~attrs_ext:(this.attributes this ext_attrs) 
-           ~attrs_end:(this.attributes this pmb_attributes_end)
+           ~attrs:(this.ext_attrs this pmb_attrs) 
            ~loc:(this.location this pmb_loc)
       );
 

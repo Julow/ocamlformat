@@ -118,6 +118,11 @@ let add_docs_attrs docs attrs =
   in
   attrs
 
+(** {!add_docs_attrs} but operate on [ext_attrs]. *)
+let add_docs_attrs' docs attrs' =
+  let open Parsetree in
+  { attrs' with attrs_before = add_docs_attrs docs attrs'.attrs_before }
+
 (* Docstrings attached to constructors or fields *)
 
 type info = docstring option
