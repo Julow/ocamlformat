@@ -211,7 +211,7 @@ module Val:
 (** Type declarations *)
 module Type:
   sig
-    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> ?text:text ->
+    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> 
       ?params:(core_type * variance_and_injectivity) list ->
       ?cstrs:(core_type * core_type * loc) list ->
       ?kind:type_kind -> ?priv:private_flag -> ?manifest:core_type -> str ->
@@ -336,30 +336,30 @@ module Str:
 (** Module declarations *)
 module Md:
   sig
-    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs  -> ?attrs_end:attrs -> ?docs:docs -> 
-      ?text:text -> str_opt -> module_type -> module_declaration
+    val mk: ?loc:loc -> ?attrs:ext_attrs -> ?docs:docs -> 
+       str_opt -> module_type -> module_declaration
   end
 
 (** Module substitutions *)
 module Ms:
   sig
-    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs -> ?attrs_end:attrs -> ?docs:docs -> 
-      ?text:text -> str -> lid -> module_substitution
+    val mk: ?loc:loc -> ?attrs:ext_attrs -> ?docs:docs -> 
+       str -> lid -> module_substitution
   end
 
 (** Module type declarations *)
 module Mtd:
   sig
-    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs  -> ?attrs_end:attrs -> 
-      ?docs:docs -> ?text:text -> ?typ:module_type -> str -> 
+    val mk: ?loc:loc -> ?attrs:ext_attrs -> 
+      ?docs:docs ->  ?typ:module_type -> str -> 
       module_type_declaration
   end
 
 (** Module bindings *)
 module Mb:
   sig
-    val mk: ?loc:loc -> ?ext:str -> ?attrs_ext:attrs  -> ?attrs_end:attrs -> 
-      ?docs:docs -> ?text:text -> str_opt -> module_expr -> module_binding
+    val mk: ?loc:loc -> ?attrs:ext_attrs -> 
+      ?docs:docs ->  str_opt -> module_expr -> module_binding
   end
 
 (** Opens *)
@@ -460,7 +460,7 @@ module Cf:
 (** Classes *)
 module Ci:
   sig
-    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> ?text:text ->
+    val mk: ?loc:loc -> ?attrs:attrs -> ?docs:docs -> 
       ?virt:virtual_flag ->
       ?params:(core_type * variance_and_injectivity) list ->
       str -> 'a -> 'a class_infos

@@ -58,6 +58,7 @@ open Parsetree
 type mapper = {
   attribute: mapper -> attribute -> attribute;
   attributes: mapper -> attribute list -> attribute list;
+  ext_attrs: mapper -> ext_attrs -> ext_attrs;
   binding_op: mapper -> binding_op -> binding_op;
   case: mapper -> case -> case;
   cases: mapper -> case list -> case list;

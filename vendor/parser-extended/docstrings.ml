@@ -163,10 +163,6 @@ let text_attr ds =
     attr_payload = PStr [item];
     attr_loc = loc }
 
-let add_text_attrs dsl attrs =
-  let fdsl = List.filter (function {ds_body=""} -> false| _ ->true) dsl in
-  (List.map text_attr fdsl) @ attrs
-
 (* Find the first non-info docstring in a list, attach it and return it *)
 let get_docstring ~info dsl =
   let rec loop = function

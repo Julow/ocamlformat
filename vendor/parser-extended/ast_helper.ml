@@ -368,44 +368,44 @@ end
 
 module Md = struct
   let mk ?(loc = !default_loc) ?(attrs=Attr.ext_attrs ())
-        ?(docs = empty_docs) ?(text = []) name typ =
+        ?(docs = empty_docs)  name typ =
     {
      pmd_name = name;
      pmd_type = typ;
-     pmd_attrs = add_docs_attrs' docs attrs;
+     pmd_ext_attrs = add_docs_attrs' docs attrs;
      pmd_loc = loc;
     }
 end
 
 module Ms = struct
   let mk ?(loc = !default_loc) ?(attrs=Attr.ext_attrs ())
-        ?(docs = empty_docs) ?(text = []) name syn =
+        ?(docs = empty_docs)  name syn =
     {
      pms_name = name;
      pms_manifest = syn;
-     pms_attrs = add_docs_attrs' docs attrs;
+     pms_ext_attrs = add_docs_attrs' docs attrs;
      pms_loc = loc;
     }
 end
 
 module Mtd = struct
   let mk ?(loc = !default_loc) ?(attrs=Attr.ext_attrs ())
-        ?(docs = empty_docs) ?(text = []) ?typ name =
+        ?(docs = empty_docs)  ?typ name =
     {
      pmtd_name = name;
      pmtd_type = typ;
-     pmtd_attrs = add_docs_attrs' docs attrs;
+     pmtd_ext_attrs = add_docs_attrs' docs attrs;
      pmtd_loc = loc;
     }
 end
 
 module Mb = struct
   let mk ?(loc = !default_loc) ?(attrs=Attr.ext_attrs ())
-        ?(docs = empty_docs) ?(text = []) name expr =
+        ?(docs = empty_docs)  name expr =
     {
      pmb_name = name;
      pmb_expr = expr;
-     pmb_attrs = add_docs_attrs' docs attrs;
+     pmb_ext_attrs = add_docs_attrs' docs attrs;
      pmb_loc = loc;
     }
 end
@@ -433,22 +433,21 @@ end
 
 module Ci = struct
   let mk ?(loc = !default_loc) ?(attrs = [])
-        ?(docs = empty_docs) ?(text = [])
+        ?(docs = empty_docs) 
         ?(virt = Concrete) ?(params = []) name expr =
     {
      pci_virt = virt;
      pci_params = params;
      pci_name = name;
      pci_expr = expr;
-     pci_attributes =
-       add_text_attrs text (add_docs_attrs docs attrs);
+     pci_attributes = add_docs_attrs docs attrs;
      pci_loc = loc;
     }
 end
 
 module Type = struct
   let mk ?(loc = !default_loc) ?(attrs = [])
-        ?(docs = empty_docs) ?(text = [])
+        ?(docs = empty_docs) 
       ?(params = [])
       ?(cstrs = [])
       ?(kind = Ptype_abstract)
@@ -462,8 +461,7 @@ module Type = struct
      ptype_kind = kind;
      ptype_private = priv;
      ptype_manifest = manifest;
-     ptype_attributes =
-       add_text_attrs text (add_docs_attrs docs attrs);
+     ptype_attributes = add_docs_attrs docs attrs;
      ptype_loc = loc;
     }
 
