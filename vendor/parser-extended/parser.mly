@@ -354,12 +354,11 @@ let extra_rhs_core_type ct ~pos =
 
 let mklb first ~loc (p, e, is_pun) attrs =
   let docs = symbol_docs loc in
-  let text = if first then empty_text else symbol_text (fst loc) in
   {
     lb_pattern = p;
     lb_expression = e;
     lb_is_pun = is_pun;
-    lb_attributes = add_text_attrs text (add_docs_attrs docs attrs);
+    lb_attributes = (add_docs_attrs docs attrs);
     lb_loc = make_loc loc;
   }
 
@@ -1274,7 +1273,7 @@ structure_item:
     body ~loc ~ext_attrs ~docs }
 
 
-%inline ext_attrs_no_ext(body):
+%inline ext_attrs_no_ext(kw, body):
   kw
   before = attributes
   body = body
@@ -1293,7 +1292,7 @@ structure_item:
     body = module_binding_body
     { Mb.mk name body }
   )
-  { $2 }
+  { $1 }
    
 ;
 
@@ -1326,7 +1325,7 @@ module_binding_body:
     name = mkrhs(module_name)
     { Mb.mk name body } 
   ) 
-  { $2 }
+  { $1 }
 ;
 
 (* The following bindings in a group of recursive module bindings. *)
@@ -1337,7 +1336,7 @@ module_binding_body:
     body = module_binding_body
     { Mb.mk name body }
   )
-  { $2 }
+  { $1 }
 ;
 
 (* -------------------------------------------------------------------------- *)
@@ -1363,12 +1362,13 @@ module_binding_body:
 (* A module type declaration. *)
 module_type_declaration: 
   ext_attrs (
-    MODULE TYPE,
+    MODULE TYPE
+    {},
     id = mkrhs(ident)
     typ = preceded(EQUAL, module_type)?
     { Mtd.mk id ?typ }
   )
-  { $3 }
+  { $1 }
 ;
 
 (* -------------------------------------------------------------------------- *)
@@ -1523,7 +1523,7 @@ signature_item:
     body = module_declaration_body
     { Md.mk name body }
   )
-  { $2 }
+  { $1 }
 ;
 
 (* The body (right-hand side) of a module declaration. *)
@@ -1549,7 +1549,7 @@ module_declaration_body:
     body = module_expr_alias
     { Md.mk name body  }
   )
-  { $2 }
+  { $1 }
 ;
 %inline module_expr_alias:
   id = mkrhs(mod_longident)
@@ -1564,7 +1564,7 @@ module_subst:
     body = mkrhs(mod_ext_longident)
     { Ms.mk uid body }
   )
-  { $2 }
+  { $1 }
 | MODULE ext attributes mkrhs(UIDENT) COLONEQUAL error
     { expecting $loc($6) "module path" }
 ;
@@ -1583,7 +1583,7 @@ module_subst:
     mty = module_type
     { Md.mk name mty }
   ) 
-  { $2 }
+  { $1 }
 ;
 %inline and_module_declaration:
   ext_attrs_no_ext (
@@ -1593,19 +1593,19 @@ module_subst:
     mty = module_type
     { Md.mk name mty }
   )
-  { $2 }
+  { $1 }
 ;
 
 (* A module type substitution *)
 module_type_subst:
   ext_attrs (
-    MODULE TYPE,
+    MODULE TYPE {},
     id = mkrhs(ident)
     COLONEQUAL
     typ=module_type
     { Mtd.mk id ~typ }
   )
-  { $2 }
+  { $1 }
 
 
 (* -------------------------------------------------------------------------- *)
@@ -1645,8 +1645,7 @@ module_type_subst:
     let attrs = attrs1 @ attrs2 in
     let loc = make_loc $sloc in
     let docs = symbol_docs $sloc in
-    let text = symbol_text $symbolstartpos in
-    Ci.mk id body ~virt ~params ~attrs ~loc ~text ~docs
+    Ci.mk id body ~virt ~params ~attrs ~loc ~docs
   }
 ;
 

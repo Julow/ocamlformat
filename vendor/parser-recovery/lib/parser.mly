@@ -341,12 +341,11 @@ let extra_rhs_core_type ct ~pos =
 
 let mklb first ~loc (p, e, is_pun) attrs =
   let docs = symbol_docs loc in
-  let text = if first then empty_text else symbol_text (fst loc) in
   {
     lb_pattern = p;
     lb_expression = e;
     lb_is_pun = is_pun;
-    lb_attributes = add_text_attrs text (add_docs_attrs docs attrs);
+    lb_attributes = add_docs_attrs docs attrs;
     lb_loc = make_loc loc;
   }
 

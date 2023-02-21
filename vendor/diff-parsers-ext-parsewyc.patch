@@ -238,7 +238,13 @@
    | [] ->
        let post = rhs_post_text endpos in
 @@@@
-     lb_attributes = add_text_attrs text (add_docs_attrs docs attrs);
+   let docs = symbol_docs loc in
+   {
+     lb_pattern = p;
+     lb_expression = e;
+     lb_is_pun = is_pun;
+-    lb_attributes = (add_docs_attrs docs attrs);
++    lb_attributes = add_docs_attrs docs attrs;
      lb_loc = make_loc loc;
    }
  
@@ -385,6 +391,80 @@
     produces a first-class module that we wish to unpack. *)
  %inline expr_colon_package_type:
 @@@@
+         { Pstr_attribute $1 }
+     | module_binding
+         { $1 }
+     | rec_module_bindings
+         { Pstr_recmodule $1 }
+-    | module_type_declaration
+-        { Pstr_modtype $1 }
+     )
+   | wrap_mkstr_ext(
+       primitive_declaration
+         { pstr_primitive $1 }
+     | value_description
+@@@@
+         { pstr_type $1 }
+     | str_type_extension
+         { pstr_typext $1 }
+     | str_exception_declaration
+         { pstr_exception $1 }
++    | module_type_declaration
++        { let (body, ext) = $1 in (Pstr_modtype body, ext) }
+     | open_declaration
+         { let (body, ext) = $1 in (Pstr_open body, ext) }
+     | class_declarations
+         { let (ext, l) = $1 in (Pstr_class l, ext) }
+     | class_type_declarations
+@@@@
+         { pstr_include $1 }
+     )
+     { $1 }
+ ;
+ 
+-%inline ext_attrs(kw, body):
+-  kw
+-  ext = ext 
+-  before = attributes
+-  body = body
+-  after = post_item_attributes
+-  { let loc = make_loc $sloc in
+-    let docs = symbol_docs $sloc in
+-    let ext_attrs = Attr.ext_attrs ~ext ~before ~after in 
+-    body ~loc ~ext_attrs ~docs }
+-
+-
+-%inline ext_attrs_no_ext(kw, body):
+-  kw
+-  before = attributes
+-  body = body
+-  after = post_item_attributes
+-  { let loc = make_loc $sloc in
+-    let docs = symbol_docs $sloc in
+-    let text = symbol_text $symbolstartpos in
+-    let ext_attrs = Attr.ext_attrs ~ext:None ~before ~after in 
+-    body ~loc ~docs ~ext_attrs }
+-
+ (* A single module binding. *)
+ %inline module_binding:
+-  ext_attrs (
+-    MODULE,
+-    name = mkrhs(module_name)
+-    body = module_binding_body
+-    { Mb.mk name body }
+-  )
+-  { $1 }
+-   
++  MODULE
++  ext = ext attrs_ext = attributes
++  name = mkrhs(module_name)
++  body = module_binding_body
++  attrs_end = post_item_attributes
++    { let docs = symbol_docs $sloc in
++      let loc = make_loc $sloc in
++      let body = Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs in
++      Pstr_module body }
+ ;
  
  (* The body (right-hand side) of a module binding. *)
  module_binding_body:
@@ -397,6 +477,92 @@
          { Pmod_constraint(me, mty) }
      | arg_and_pos = functor_arg body = module_binding_body
          { let (_, arg) = arg_and_pos in
+@@@@
+   rec_module_binding list(and_module_binding)
+     { $1 :: $2 }
+ ;
+ 
+ (* The first binding in a group of recursive module bindings. *)
+-%inline rec_module_binding: 
+-  ext_attrs (
+-    MODULE,
+-    REC
+-    name = mkrhs(module_name)
+-    { Mb.mk name body } 
+-  ) 
+-  { $1 }
++%inline rec_module_binding:
++  MODULE
++  ext = ext
++  attrs_ext = attributes
++  REC
++  name = mkrhs(module_name)
++  body = module_binding_body
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Mb.mk name body ?ext ~attrs_ext ~attrs_end ~loc ~docs
++  }
+ ;
+ 
+ (* The following bindings in a group of recursive module bindings. *)
+ %inline and_module_binding:
+-  ext_attrs_no_ext (
+-    AND,
+-    name = mkrhs(module_name)
+-    body = module_binding_body
+-    { Mb.mk name body }
+-  )
+-  { $1 }
++  AND
++  attrs_ext = attributes
++  name = mkrhs(module_name)
++  body = module_binding_body
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    let text = symbol_text $symbolstartpos in
++    Mb.mk name body ~attrs_ext ~attrs_end ~loc ~text ~docs
++  }
+ ;
+ 
+ (* -------------------------------------------------------------------------- *)
+ 
+ (* Shared material between structures and signatures. *)
+@@@@
+     Incl.mk thing ~attrs ~loc ~docs, ext
+   }
+ ;
+ 
+ (* A module type declaration. *)
+-module_type_declaration: 
+-  ext_attrs (
+-    MODULE TYPE
+-    {},
+-    id = mkrhs(ident)
+-    typ = preceded(EQUAL, module_type)?
+-    { Mtd.mk id ?typ }
+-  )
+-  { $1 }
++module_type_declaration:
++  MODULE TYPE
++  ext = ext
++  attrs_ext = attributes
++  id = mkrhs(ident)
++  typ = preceded(EQUAL, module_type)?
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Mtd.mk id ?typ ?ext ~attrs_ext ~attrs_end ~loc ~docs, ext
++  }
+ ;
+ 
+ (* -------------------------------------------------------------------------- *)
+ 
+ (* Opens. *)
 @@@@
  
  (* -------------------------------------------------------------------------- *)
@@ -437,6 +603,74 @@
      | module_type WITH separated_nonempty_llist(AND, with_constraint)
          { Pmty_with($1, $3) }
 @@@@
+       { let docs = symbol_docs $sloc in
+         mksig ~loc:$sloc (Psig_extension ($1, (add_docs_attrs docs $2))) }
+   | mksig(
+       floating_attribute
+         { Psig_attribute $1 }
+-    | module_declaration
+-        { Psig_module $1 }
+-    | module_alias
+-        { Psig_module $1 }
+-    | module_subst
+-        { Psig_modsubst $1 }
+     | rec_module_declarations
+-        { Psig_recmodule $1 }
+-    | module_type_declaration
+-        { Psig_modtype $1 }
+-    | module_type_subst
+-        { Psig_modtypesubst $1 }
++      { Psig_recmodule $1}
+     )
+     { $1 }
+   | wrap_mksig_ext(
+       value_description
+         { psig_value $1 }
+@@@@
+         { psig_typesubst $1 }
+     | sig_type_extension
+         { psig_typext $1 }
+     | sig_exception_declaration
+         { psig_exception $1 }
++    | module_declaration
++        { let (body, ext) = $1 in (Psig_module body, ext) }
++    | module_alias
++        { let (body, ext) = $1 in (Psig_module body, ext) }
++    | module_subst
++        { let (body, ext) = $1 in (Psig_modsubst body, ext) }
++    | module_type_declaration
++        { let (body, ext) = $1 in (Psig_modtype body, ext) }
++    | module_type_subst
++        { let (body, ext) = $1 in (Psig_modtypesubst body, ext) }
+     | open_description
+         { let (body, ext) = $1 in (Psig_open body, ext) }
+     | include_statement(module_type)
+         { psig_include $1 }
+     | class_descriptions
+@@@@
+     )
+     { $1 }
+ 
+ (* A module declaration. *)
+ %inline module_declaration:
+-  ext_attrs (
+-    MODULE,
+-    name = mkrhs(module_name)
+-    body = module_declaration_body
+-    { Md.mk name body }
+-  )
+-  { $1 }
++  MODULE
++  ext = ext attrs_ext = attributes
++  name = mkrhs(module_name)
++  body = module_declaration_body
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Md.mk name body ~attrs_ext ~attrs_end ~loc ~docs, ext
++  }
+ ;
  
  (* The body (right-hand side) of a module declaration. *)
  module_declaration_body:
@@ -449,19 +683,153 @@
          { let (_, arg) = arg_and_pos in
            Pmty_functor(arg, body) }
      )
-@@@@
-     let attrs = attrs1 @ attrs2 in
-     let loc = make_loc $sloc in
-     let docs = symbol_docs $sloc in
-     Ms.mk uid body ~attrs ~loc ~docs, ext
-   }
+     { $1 }
+ ;
+ 
+ (* A module alias declaration (in a signature). *)
+ %inline module_alias:
+-  ext_attrs (
+-    MODULE,
+-    name = mkrhs(module_name)
+-    EQUAL
+-    body = module_expr_alias
+-    { Md.mk name body  }
+-  )
+-  { $1 }
++  MODULE
++  ext = ext attrs_ext = attributes
++  name = mkrhs(module_name)
++  EQUAL
++  body = module_expr_alias
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Md.mk name body ~attrs_ext ~attrs_end ~loc ~docs, ext
++  }
+ ;
+ %inline module_expr_alias:
+   id = mkrhs(mod_longident)
+     { Mty.alias ~loc:(make_loc $sloc) id }
+ ;
+ (* A module substitution (in a signature). *)
+ module_subst:
+-  ext_attrs (
+-    MODULE,
+-    uid = mkrhs(UIDENT)
+-    COLONEQUAL
+-    body = mkrhs(mod_ext_longident)
+-    { Ms.mk uid body }
+-  )
+-  { $1 }
 -| MODULE ext attributes mkrhs(UIDENT) COLONEQUAL error
 -    { expecting $loc($6) "module path" }
++  MODULE
++  ext = ext attrs_ext = attributes
++  uid = mkrhs(UIDENT)
++  COLONEQUAL
++  body = mkrhs(mod_ext_longident)
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Ms.mk uid body ~attrs_ext ~attrs_end ~loc ~docs, ext
++  }
  ;
  
  (* A group of recursive module declarations. *)
  %inline rec_module_declarations:
-   xlist(rec_module_declaration, and_module_declaration)
+   rec_module_declaration list(and_module_declaration)
+     { $1 :: $2 }
+ ;
+ %inline rec_module_declaration:
+-  ext_attrs (
+-    MODULE,
+-    REC
+-    name = mkrhs(module_name)
+-    COLON
+-    mty = module_type
+-    { Md.mk name mty }
+-  ) 
+-  { $1 }
++  MODULE
++  ext = ext
++  attrs_ext = attributes
++  REC
++  name = mkrhs(module_name)
++  COLON
++  mty = module_type
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Md.mk name mty ?ext ~attrs_ext ~attrs_end ~loc ~docs
++  }
+ ;
+ %inline and_module_declaration:
+-  ext_attrs_no_ext (
+-    AND,
+-    name = mkrhs(module_name)
+-    COLON
+-    mty = module_type
+-    { Md.mk name mty }
+-  )
+-  { $1 }
++  AND
++  attrs_ext = attributes
++  name = mkrhs(module_name)
++  COLON
++  mty = module_type
++  attrs_end = post_item_attributes
++  {
++    let docs = symbol_docs $sloc in
++    let loc = make_loc $sloc in
++    let text = symbol_text $symbolstartpos in
++    Md.mk name mty ~attrs_ext ~attrs_end ~loc ~text ~docs
++  }
+ ;
+ 
+ (* A module type substitution *)
+ module_type_subst:
+-  ext_attrs (
+-    MODULE TYPE {},
+-    id = mkrhs(ident)
+-    COLONEQUAL
+-    typ=module_type
+-    { Mtd.mk id ~typ }
+-  )
+-  { $1 }
++  MODULE TYPE
++  ext = ext
++  attrs_ext = attributes
++  id = mkrhs(ident)
++  COLONEQUAL
++  typ=module_type
++  attrs_end = post_item_attributes
++  {
++    let loc = make_loc $sloc in
++    let docs = symbol_docs $sloc in
++    Mtd.mk id ~typ ?ext ~attrs_ext ~attrs_end ~loc ~docs, ext
++  }
+ 
+ 
+ (* -------------------------------------------------------------------------- *)
+ 
+ (* Class declarations. *)
+@@@@
+   attrs2 = post_item_attributes
+   {
+     let attrs = attrs1 @ attrs2 in
+     let loc = make_loc $sloc in
+     let docs = symbol_docs $sloc in
+-    Ci.mk id body ~virt ~params ~attrs ~loc ~docs
++    let text = symbol_text $symbolstartpos in
++    Ci.mk id body ~virt ~params ~attrs ~loc ~text ~docs
+   }
+ ;
+ 
+ class_fun_binding:
+     EQUAL class_expr
 @@@@
  
  (* -------------------------------------------------------------------------- *)
