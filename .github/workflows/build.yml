@@ -33,11 +33,20 @@ jobs:
       - name: Opam dependencies
         run: opam install --deps-only -t .
 
+      - name: Build
+        run: opam exec -- dune build @install
+
       - name: Runtest
         run: opam exec -- dune runtest
 
       - name: Check help files
         run: opam exec -- dune build @help --auto-promote
+
+      # - name: Upload binary
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: ocamlformat-ubuntu-x86_64
+      #     path: _build/install/default/bin/ocamlformat
 
   test-branch:
     needs: build
@@ -49,6 +58,7 @@ jobs:
           - ocamlformat
           - janestreet
     steps:
+      - use: build
       - name: Test ${{ matrix.profile }} profile
         run: opam exec -- ./tools/test_branch.sh -a origin/${{ github.event.pull_request.base.ref }} -b HEAD 'profile=${{ matrix.profile }}'
         shell: bash
