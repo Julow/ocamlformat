@@ -1329,12 +1329,15 @@ and fmt_indexop_access c ctx ~fmt_atrs ~has_attr ~parens x =
                  fmt_assign_arrow c $ fmt_expression c (sub_exp ~ctx e) ) )
        $ fmt_atrs ) )
 
-(** [<epi>\[~label:\](fun ... -> ...)]. [xarg] is expected to be a
-    [Pexp_fun], label is optional. *)
-and fmt_label_fun_arg ~box ?(epi = noop) c lbl ({ast= arg; _} as xarg) =
+(** [\[~label:\](fun ... -> ...)]. [xarg] is expected to be a [Pexp_fun],
+    label is optional. *)
+and fmt_label_fun_arg ~box c lbl ({ast= arg; _} as xarg) =
   (* Side effects of Cmts.fmt c.cmts before Sugar.fun_ is important. *)
-  let cmts = Cmts.fmt_before c arg.pexp_loc in
   let has_label = match lbl with Nolabel -> false | _ -> true in
+  let cmts_outer, cmts_inner =
+    let cmts = Cmts.fmt_before c arg.pexp_loc in
+    if has_label then (noop, cmts) else (cmts, noop)
+  in
   let xargs, xbody = Sugar.fun_ c.cmts xarg in
   let fmt_cstr, xbody = type_constr_and_body c xbody in
   let body =
@@ -1363,12 +1366,10 @@ and fmt_label_fun_arg ~box ?(epi = noop) c lbl ({ast= arg; _} as xarg) =
     closing_paren c ?force ~offset
   in
   hovbox_if box 0
-    ( epi
+    ( cmts_outer
     $ hvbox 2
         ( hvbox 2
-            ( hvbox 2
-                (hvbox_if has_label 0
-                   (fmt_label lbl ":" $ cmts $ fmt "(fun") )
+            ( hovbox 2 (fmt_label lbl ":" $ cmts_inner $ fmt "(fun")
             $ fmt "@ "
             $ fmt_attributes c arg.pexp_attributes ~suf:" "
             $ fmt_fun_args c xargs $ fmt_opt fmt_cstr )
@@ -1396,7 +1397,7 @@ and fmt_label_arg ?(box = true) ?epi ?parens ?eol c
         | Nolabel -> noop
       in
       lbl $ fmt_expression c ~box ?epi ?parens xarg
-  | _, Pexp_fun _ -> fmt_label_fun_arg ~box:true ?epi c lbl xarg
+  | _, Pexp_fun _ -> fmt_label_fun_arg ~box:true c lbl xarg
   | (Labelled _ | Optional _), _ when Cmts.has_after c.cmts xarg.ast.pexp_loc
     ->
       let cmts_after = Cmts.fmt_after c xarg.ast.pexp_loc in
@@ -1875,7 +1876,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
           let epi = fmt_args_grouped e0 e1N $ fmt "@ " in
           hvbox 0
             (Params.parens_if parens c.conf
-               (hovbox 2 (fmt_label_fun_arg ~box:false ~epi c lbl fun_)) )
+               (hovbox 2 (epi $ fmt_label_fun_arg ~box:false c lbl fun_)) )
       | ( lbl
         , ( { pexp_desc= Pexp_function [{pc_lhs; pc_guard= None; pc_rhs}]
             ; pexp_loc
