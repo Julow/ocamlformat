@@ -1355,8 +1355,8 @@ and fmt_label_fun_arg ~box ?(epi = noop) c lbl ({ast= arg; _} as xarg) =
     break $ fmt_expression c ?box xbody
   and closing =
     let force =
-      if Location.is_single_line arg.pexp_loc c.conf.fmt_opts.margin.v then
-        Fit
+      if box || Location.is_single_line arg.pexp_loc c.conf.fmt_opts.margin.v
+      then Fit
       else Break
     and offset = if box then 0 else -2 in
     closing_paren c ~force ~offset
@@ -1447,7 +1447,7 @@ and fmt_args_grouped ?epi:(global_epi = noop) c ctx args =
         ~cache_key:(Arg (lbl, x))
         (fun () ->
           let cmts = Cmts.drop_before c.cmts x.pexp_loc in
-          fmt_arg ~first:false ~last:false {c with cmts} (lbl, x) )
+          fmt_arg ~first:false ~last:false {c with cmts} (lbl, x))
         c.cmts
     in
     let breaks = String.(rstrip output |> is_substring ~substring:"\n   ") in
@@ -1969,7 +1969,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
                (fmt_expressions c (expression_width c) (sub_exp ~ctx) e1N
                   (fun e ->
                     let fmt_cmts = Cmts.fmt c ~eol:cmt_break e.pexp_loc in
-                    fmt_cmts @@ (sub_exp ~ctx >> fmt_expression c) e )
+                    fmt_cmts @@ (sub_exp ~ctx >> fmt_expression c) e)
                   p pexp_loc )
            $ fmt_atrs ) )
   | Pexp_assert e0 ->

@@ -79,7 +79,7 @@ let parse ?(disable_w50 = false) parse fragment (conf : Conf.t) ~input_name
         then (
           w50 := (loc, warn) :: !w50 ;
           false )
-        else not conf.opr_opts.quiet.v )
+        else not conf.opr_opts.quiet.v)
       ~f:(fun () ->
         let ast = parse fragment ~input_name source in
         Warnings.check_fatal () ;
@@ -93,7 +93,7 @@ let parse ?(disable_w50 = false) parse fragment (conf : Conf.t) ~input_name
           tokens lexbuf
         in
         let source = Source.create ~text:source ~tokens in
-        {ast; comments; prefix= hash_bang; source} )
+        {ast; comments; prefix= hash_bang; source})
   in
   match List.rev !w50 with [] -> t | w50 -> raise (Warning50 w50)
 

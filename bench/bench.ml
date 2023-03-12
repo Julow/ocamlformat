@@ -55,7 +55,7 @@ let tests =
             let range = Range.make source ~range in
             ignore
               (Translation_unit.numeric kind ~input_name ~source ~range conf)
-        ) )
+        ))
     inputs
 
 let benchmark () =
@@ -95,8 +95,8 @@ let process_results results =
             with Not_found -> Hashtbl.create 16
           in
           Hashtbl.add metrics metric_name ols ;
-          Hashtbl.replace metrics_by_test test_name metrics )
-        result )
+          Hashtbl.replace metrics_by_test test_name metrics)
+        result)
     results ;
   metrics_by_test
 
