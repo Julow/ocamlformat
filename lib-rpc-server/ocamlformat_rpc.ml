@@ -78,7 +78,7 @@ let run_format conf x =
       | Ok formatted -> Stop (Ok (`Format formatted))
       | Error e ->
           Translation_unit.Error.print Format.str_formatter e ;
-          Continue ())
+          Continue () )
     (* The formatting functions are ordered in such a way that the ones
        expecting a keyword first (like signatures) are placed before the more
        general ones (like toplevel phrases). Parsing a file as `--impl` with

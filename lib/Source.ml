@@ -29,8 +29,7 @@ let string_at t (l : Location.t) =
 
 let find_token t k pos =
   Array.binary_search t.tokens
-    ~compare:(fun (_, elt) pos ->
-      Position.compare elt.Location.loc_start pos)
+    ~compare:(fun (_, elt) pos -> Position.compare elt.Location.loc_start pos)
     k pos
 
 let find_first_token_on_line t line =

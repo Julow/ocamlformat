@@ -315,7 +315,7 @@ let warn_deprecated (config : Conf_t.t) loc fmt =
   Format.kasprintf
     (fun s ->
       if not Conf_t.(config.opr_opts.quiet.v) then
-        Location.deprecated loc ~use:loc ?def:None s)
+        Location.deprecated loc ~use:loc ?def:None s )
     fmt
 
 module Value = struct
@@ -384,8 +384,7 @@ let choice ~all ?(removed_values = []) ~names ~default ~doc ~kind
     asprintf "%s %a" doc
       (pp_print_list
          ~pp_sep:(fun fs () -> fprintf fs "@,")
-         (fun fs (s, _, d, st) ->
-           fprintf fs "%s%a" d (Value.status_doc s) st) )
+         (fun fs (s, _, d, st) -> fprintf fs "%s%a" d (Value.status_doc s) st) )
       all
   in
   let values = List.map all ~f:(fun (v, _, _, _) -> v) in

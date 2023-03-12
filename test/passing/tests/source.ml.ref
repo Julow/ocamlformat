@@ -1001,7 +1001,7 @@ let id x = x
 let idb1 =
   (fun id ->
     let _ = id true in
-    id)
+    id )
     id
 
 let idb2 : bool -> bool = id
@@ -1095,7 +1095,7 @@ let rec variantize : type t. t ty -> t -> variant =
       VRecord
         (List.map
            (fun (Field {field_type; label; get}) ->
-             (label, variantize field_type (get x)))
+             (label, variantize field_type (get x)) )
            fields )
 
 (* Extraction *)
@@ -1136,7 +1136,7 @@ let rec devariantize : type t. t ty -> variant -> t =
       List.iter2
         (fun (Field {label; field_type; set}) (lab, v) ->
           if label <> lab then raise VariantMismatch ;
-          set builder (devariantize field_type v))
+          set builder (devariantize field_type v) )
         fields fl ;
       of_builder builder
   | _ -> raise VariantMismatch
@@ -9177,7 +9177,7 @@ f
   | true ->
       let () = () in
       ()
-  | false -> ())
+  | false -> () )
   ()
 ;;
 
@@ -9187,7 +9187,7 @@ f
       let () = () in
       ()
   (* comment *)
-  | false -> ())
+  | false -> () )
   ()
 
 let xxxxxx =
