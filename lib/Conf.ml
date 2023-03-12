@@ -442,8 +442,7 @@ module Formatting = struct
     in
     Decl.choice ~names ~all ~default ~doc ~kind
       (fun conf elt ->
-        update conf ~f:(fun f -> {f with break_collection_expressions= elt})
-        )
+        update conf ~f:(fun f -> {f with break_collection_expressions= elt}) )
       (fun conf -> conf.fmt_opts.break_collection_expressions)
 
   let break_colon =
@@ -476,7 +475,8 @@ module Formatting = struct
            on their line if they fit." ]
     in
     Decl.choice ~names ~all ~default ~doc ~kind
-      (fun conf elt -> update conf ~f:(fun f -> {f with break_fun_decl= elt}))
+      (fun conf elt ->
+        update conf ~f:(fun f -> {f with break_fun_decl= elt}) )
       (fun conf -> conf.fmt_opts.break_fun_decl)
 
   let break_fun_sig =
@@ -597,8 +597,7 @@ module Formatting = struct
     Decl.choice ~names ~all ~default ~doc ~kind
       (fun conf elt ->
         update conf ~f:(fun f ->
-            {f with break_struct= Elt.make Poly.(elt.v = `Force) elt.from} )
-        )
+            {f with break_struct= Elt.make Poly.(elt.v = `Force) elt.from} ) )
       (fun conf ->
         let elt = conf.fmt_opts.break_struct in
         if elt.v then Elt.make `Force elt.from
@@ -895,8 +894,7 @@ module Formatting = struct
     in
     Decl.choice ~names ~all ~default ~doc ~kind
       (fun conf elt ->
-        update conf ~f:(fun f -> {f with indicate_nested_or_patterns= elt})
-        )
+        update conf ~f:(fun f -> {f with indicate_nested_or_patterns= elt}) )
       (fun conf -> conf.fmt_opts.indicate_nested_or_patterns)
 
   let infix_precedence =
@@ -923,8 +921,7 @@ module Formatting = struct
     let names = ["leading-nested-match-parens"] in
     Decl.flag ~names ~default ~doc ~kind ~allow_inline:false
       (fun conf elt ->
-        update conf ~f:(fun f -> {f with leading_nested_match_parens= elt})
-        )
+        update conf ~f:(fun f -> {f with leading_nested_match_parens= elt}) )
       (fun conf -> conf.fmt_opts.leading_nested_match_parens)
 
   let let_and =
@@ -1190,7 +1187,8 @@ module Formatting = struct
           "$(b,before) breaks the sequence before semicolons." ]
     in
     Decl.choice ~names ~all ~default ~doc ~kind
-      (fun conf elt -> update conf ~f:(fun f -> {f with sequence_style= elt}))
+      (fun conf elt ->
+        update conf ~f:(fun f -> {f with sequence_style= elt}) )
       (fun conf -> conf.fmt_opts.sequence_style)
 
   let single_case =

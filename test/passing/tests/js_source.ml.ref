@@ -914,8 +914,8 @@ let id x = x
 
 let idb1 =
   (fun id ->
-    let _ = id true in
-    id)
+  let _ = id true in
+  id)
     id
 ;;
 
@@ -1063,8 +1063,8 @@ let rec devariantize : type t. t ty -> variant -> t =
     let builder = create_builder () in
     List.iter2
       (fun (Field { label; field_type; set }) (lab, v) ->
-        if label <> lab then raise VariantMismatch;
-        set builder (devariantize field_type v))
+      if label <> lab then raise VariantMismatch;
+      set builder (devariantize field_type v))
       fields
       fl;
     of_builder builder
@@ -9868,10 +9868,18 @@ let () =
       very_long_argument_name_one
       very_long_argument_name_two
       very_long_argument_name_three
-    -> ())
+      -> ())
 ;;
 
 let () =
   ((one_mississippi, two_mississippi, three_mississippi, four_mississippi)
     : Mississippi.t * Mississippi.t * Mississippi.t * Mississippi.t)
+;;
+
+let _ =
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    ~bbbbbbbbbbbbbbbbbbbbbbbbbbbb:(fun
+      (_ : (ccccccccccccc * ddddddddddddddddddddddddddddd) eeee)
+      -> FFFFFFFFF gg)
+    ~h
 ;;

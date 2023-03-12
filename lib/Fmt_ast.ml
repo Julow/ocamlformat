@@ -1358,20 +1358,20 @@ and fmt_label_fun_arg ~box ?(epi = noop) c lbl ({ast= arg; _} as xarg) =
       if Location.is_single_line arg.pexp_loc c.conf.fmt_opts.margin.v then
         Fit
       else Break
-    in
-    closing_paren c ~force ~offset:(-2)
+    and offset = if box then 0 else -2 in
+    closing_paren c ~force ~offset
   in
   hovbox_if box 0
-    ( hvbox 2
-        (hvbox 2
-           ( epi
-           $ ( hvbox 2
-                 (hvbox_if has_label 0
-                    (fmt_label lbl ":" $ cmts $ fmt "(fun") )
-             $ fmt "@ "
-             $ fmt_attributes c arg.pexp_attributes ~suf:" "
-             $ fmt_fun_args c xargs $ fmt_opt fmt_cstr )
-           $ fmt "@ ->" ) )
+    ( epi
+    $ hvbox 2
+        ( hvbox 2
+            ( hvbox 2
+                (hvbox_if has_label 0
+                   (fmt_label lbl ":" $ cmts $ fmt "(fun") )
+            $ fmt "@ "
+            $ fmt_attributes c arg.pexp_attributes ~suf:" "
+            $ fmt_fun_args c xargs $ fmt_opt fmt_cstr )
+        $ fmt "@ ->" )
     $ body $ closing
     $ Cmts.fmt_after c arg.pexp_loc )
 
@@ -1395,7 +1395,7 @@ and fmt_label_arg ?(box = true) ?epi ?parens ?eol c
         | Nolabel -> noop
       in
       lbl $ fmt_expression c ~box ?epi ?parens xarg
-  | _, Pexp_fun _ -> fmt_label_fun_arg ~box ?epi c lbl xarg
+  | _, Pexp_fun _ -> fmt_label_fun_arg ~box:true ?epi c lbl xarg
   | (Labelled _ | Optional _), _ when Cmts.has_after c.cmts xarg.ast.pexp_loc
     ->
       let cmts_after = Cmts.fmt_after c xarg.ast.pexp_loc in
@@ -1446,8 +1446,8 @@ and fmt_args_grouped ?epi:(global_epi = noop) c ctx args =
       Cmts.preserve
         ~cache_key:(Arg (lbl, x))
         (fun () ->
-            let cmts = Cmts.drop_before c.cmts x.pexp_loc in
-            fmt_arg ~first:false ~last:false {c with cmts} (lbl, x) )
+          let cmts = Cmts.drop_before c.cmts x.pexp_loc in
+          fmt_arg ~first:false ~last:false {c with cmts} (lbl, x) )
         c.cmts
     in
     let breaks = String.(rstrip output |> is_substring ~substring:"\n   ") in
@@ -1566,11 +1566,7 @@ and fmt_infix_op_args c ~parens xexp op_args =
     let indent = if first_grp && parens then -2 else 0 in
     hovbox indent
       (list_fl args
-         (fun
-         ~first
-         ~last
-         (_, cmts_before, cmts_after, (op, xarg))
-         ->
+         (fun ~first ~last (_, cmts_before, cmts_after, (op, xarg)) ->
            let very_first = first_grp && first in
            let very_last = last_grp && last in
            cmts_before
@@ -1972,8 +1968,8 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
            ( p.box
                (fmt_expressions c (expression_width c) (sub_exp ~ctx) e1N
                   (fun e ->
-                      let fmt_cmts = Cmts.fmt c ~eol:cmt_break e.pexp_loc in
-                      fmt_cmts @@ (sub_exp ~ctx >> fmt_expression c) e )
+                    let fmt_cmts = Cmts.fmt c ~eol:cmt_break e.pexp_loc in
+                    fmt_cmts @@ (sub_exp ~ctx >> fmt_expression c) e )
                   p pexp_loc )
            $ fmt_atrs ) )
   | Pexp_assert e0 ->
@@ -2124,11 +2120,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
         ( Params.Exp.wrap c.conf ~parens:(parens || has_attr)
             (hvbox 0
                (list_fl cnd_exps
-                  (fun
-                  ~first
-                  ~last
-                  (xcond, xbch, pexp_attributes)
-                  ->
+                  (fun ~first ~last (xcond, xbch, pexp_attributes) ->
                     let symbol_parens = Exp.is_symbol xbch.ast in
                     let parens_bch = parenze_exp xbch && not symbol_parens in
                     let parens_exp = false in

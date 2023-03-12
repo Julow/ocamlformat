@@ -73,8 +73,8 @@ module Make (IO : IO.S) = struct
           let c =
             List.fold_left
               (fun acc -> function
-                | List [Atom name; Atom value] -> (name, value) :: acc
-                | _ -> acc )
+              | List [Atom name; Atom value] -> (name, value) :: acc
+              | _ -> acc )
               [] l
             |> List.rev
           in

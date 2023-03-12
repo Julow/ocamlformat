@@ -384,7 +384,8 @@ let choice ~all ?(removed_values = []) ~names ~default ~doc ~kind
     asprintf "%s %a" doc
       (pp_print_list
          ~pp_sep:(fun fs () -> fprintf fs "@,")
-         (fun fs (s, _, d, st) -> fprintf fs "%s%a" d (Value.status_doc s) st) )
+         (fun fs (s, _, d, st) ->
+           fprintf fs "%s%a" d (Value.status_doc s) st ) )
       all
   in
   let values = List.map all ~f:(fun (v, _, _, _) -> v) in
@@ -439,7 +440,7 @@ let update store ~config ~from:new_from ~name ~value ~inline =
   List.find_map store
     ~f:(fun
       (Pack {names; parse; update; allow_inline; get_value; to_string; _})
-    ->
+      ->
       if List.exists names ~f:(String.equal name) then
         if inline && not allow_inline then
           Some (Error (Error.Misplaced (name, value)))
