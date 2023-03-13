@@ -69,7 +69,8 @@ let tests_list_pn =
           Stdlib.__LOC__ expected_calls got_calls )
   in
   [ test "evaluation order" ~expected:"abcde"
-      ~expected_calls:["-ab"; "abc"; "bcd"; "cde"; "de-"] (fun pp_spy ->
+      ~expected_calls:["-ab"; "abc"; "bcd"; "cde"; "de-"]
+      (fun pp_spy ->
         let l = ["a"; "b"; "c"; "d"; "e"] in
         Fmt.list_pn l pp_spy )
   ; test "does not call pp if not formatting" ~expected:"" ~expected_calls:[]
@@ -94,7 +95,8 @@ let tests_list_k =
           Stdlib.__LOC__ expected_calls got_calls )
   in
   [ test "evaluation order" ~expected:"a b c d e"
-      ~expected_calls:["a"; "b"; "c"; "d"; "e"] (fun pp_spy ->
+      ~expected_calls:["a"; "b"; "c"; "d"; "e"]
+      (fun pp_spy ->
         let l = ["a"; "b"; "c"; "d"; "e"] in
         Fmt.list_k l (Fmt.str " ") pp_spy )
   ; test "does not call pp if not formatting" ~expected:"" ~expected_calls:[]

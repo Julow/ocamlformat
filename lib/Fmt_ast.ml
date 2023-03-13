@@ -409,7 +409,8 @@ let docstring_epi ~standalone ~next ~epi ~floating =
   | _ -> epi
 
 let fmt_docstring c ?(standalone = false) ?pro ?epi doc =
-  list_pn (Option.value ~default:[] doc)
+  list_pn
+    (Option.value ~default:[] doc)
     (fun ~prev:_ ({txt; loc}, floating) ~next ->
       let epi = docstring_epi ~standalone ~next ~epi ~floating in
       fmt_parsed_docstring c ~loc ?pro ~epi txt (Docstring.parse ~loc txt) )
@@ -1331,7 +1332,7 @@ and fmt_indexop_access c ctx ~fmt_atrs ~has_attr ~parens x =
 
 (** [\[~label:\](fun ... -> ...)]. [xarg] is expected to be a [Pexp_fun],
     label is optional. *)
-and fmt_label_fun_arg ~box c lbl ({ast= arg; _} as xarg) =
+and fmt_label_fun_arg ?(epi = noop) ~box c lbl ({ast= arg; _} as xarg) =
   (* Side effects of Cmts.fmt c.cmts before Sugar.fun_ is important. *)
   let has_label = match lbl with Nolabel -> false | _ -> true in
   let cmts_outer, cmts_inner =
@@ -1366,14 +1367,13 @@ and fmt_label_fun_arg ~box c lbl ({ast= arg; _} as xarg) =
     closing_paren c ?force ~offset
   in
   hovbox_if box 0
-    ( cmts_outer
-    $ hvbox 2
-        ( hvbox 2
+    ( hvbox 2
+        ( epi $ cmts_outer
+        $ hvbox 2
             ( hovbox 0 (fmt_label lbl ":" $ cmts_inner $ fmt "(fun")
             $ fmt "@ "
             $ fmt_attributes c arg.pexp_attributes ~suf:" "
-            $ fmt_fun_args c xargs $ fmt_opt fmt_cstr )
-        $ fmt "@ ->" )
+            $ fmt_fun_args c xargs $ fmt_opt fmt_cstr $ fmt "@ ->" ) )
     $ body $ closing
     $ Cmts.fmt_after c arg.pexp_loc )
 
@@ -1876,7 +1876,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
           let epi = fmt_args_grouped e0 e1N $ fmt "@ " in
           hvbox 0
             (Params.parens_if parens c.conf
-               (hovbox 2 (epi $ fmt_label_fun_arg ~box:false c lbl fun_)) )
+               (hovbox 2 (fmt_label_fun_arg ~epi ~box:false c lbl fun_)) )
       | ( lbl
         , ( { pexp_desc= Pexp_function [{pc_lhs; pc_guard= None; pc_rhs}]
             ; pexp_loc
