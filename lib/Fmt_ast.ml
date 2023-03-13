@@ -1369,7 +1369,7 @@ and fmt_label_fun_arg ~box c lbl ({ast= arg; _} as xarg) =
     ( cmts_outer
     $ hvbox 2
         ( hvbox 2
-            ( hovbox 2 (fmt_label lbl ":" $ cmts_inner $ fmt "(fun")
+            ( hovbox 0 (fmt_label lbl ":" $ cmts_inner $ fmt "(fun")
             $ fmt "@ "
             $ fmt_attributes c arg.pexp_attributes ~suf:" "
             $ fmt_fun_args c xargs $ fmt_opt fmt_cstr )
