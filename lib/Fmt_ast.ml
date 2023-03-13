@@ -409,8 +409,7 @@ let docstring_epi ~standalone ~next ~epi ~floating =
   | _ -> epi
 
 let fmt_docstring c ?(standalone = false) ?pro ?epi doc =
-  list_pn
-    (Option.value ~default:[] doc)
+  list_pn (Option.value ~default:[] doc)
     (fun ~prev:_ ({txt; loc}, floating) ~next ->
       let epi = docstring_epi ~standalone ~next ~epi ~floating in
       fmt_parsed_docstring c ~loc ?pro ~epi txt (Docstring.parse ~loc txt) )
@@ -1341,6 +1340,7 @@ and fmt_label_fun_arg ?(epi = noop) ~box c lbl ({ast= arg; _} as xarg) =
   in
   let xargs, xbody = Sugar.fun_ c.cmts xarg in
   let fmt_cstr, xbody = type_constr_and_body c xbody in
+  let wrap = if c.conf.fmt_opts.wrap_fun_args.v then Fn.id else hvbox 2 in
   let body =
     let box =
       match xbody.ast.pexp_desc with
@@ -1358,16 +1358,11 @@ and fmt_label_fun_arg ?(epi = noop) ~box c lbl ({ast= arg; _} as xarg) =
     in
     break $ fmt_expression c ?box xbody
   and closing =
-    let force =
-      if box then None
-      else if Location.is_single_line arg.pexp_loc c.conf.fmt_opts.margin.v
-      then Some Fit
-      else Some Break
-    and offset = if box then 0 else -2 in
-    closing_paren c ?force ~offset
+    let offset = if box then 0 else -2 in
+    closing_paren c ~offset
   in
   hovbox_if box 0
-    ( hvbox 2
+    ( wrap
         ( epi $ cmts_outer
         $ hvbox 2
             ( hovbox 0 (fmt_label lbl ":" $ cmts_inner $ fmt "(fun")
@@ -2570,8 +2565,8 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
           when Base.phys_equal xexp.ast z ->
             Fn.id
         | Exp {pexp_desc= Pexp_ifthenelse (eN, _); _}
-          when List.exists eN ~f:(fun x ->
-                   Base.phys_equal xexp.ast x.if_body ) ->
+          when List.exists eN ~f:(fun x -> Base.phys_equal xexp.ast x.if_body)
+          ->
             Fn.id
         (* begin-end keywords are handled when printing pattern-matching
            cases *)

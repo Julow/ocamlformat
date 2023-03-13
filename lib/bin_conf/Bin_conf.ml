@@ -411,8 +411,7 @@ let read_config_file ?version_check ?disable_conf_attrs conf = function
               |> Migrate_ast.Location.of_lines ~filename
             in
             let _ocp_indent_conf, conf, errors =
-              List.fold_left lines
-                ~init:(ocp_indent_conf, conf, [])
+              List.fold_left lines ~init:(ocp_indent_conf, conf, [])
                 ~f:(fun (ocp_indent_conf, conf, errors) {txt= line; loc} ->
                   try
                     let ocp_indent_conf =
