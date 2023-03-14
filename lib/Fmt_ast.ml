@@ -1373,9 +1373,10 @@ and fmt_label_arg ?(box = true) ?epi ?parens ?eol c
       in
       hovbox_if box 2
         ( hvbox 2
-            ( fmt_label lbl ":@," $ cmt_before $ fmt "(fun" $ fmt "@ "
-            $ ( fmt_attributes c arg.pexp_attributes ~suf:" "
-              $ fmt_fun_args c xargs $ fmt_opt fmt_cstr $ fmt "@ ->" ) )
+            ( fmt_label lbl ":@," $ cmt_before $ fmt "(fun" $ fmt "@;<1 2>"
+            $ hvbox 0
+                ( fmt_attributes c arg.pexp_attributes ~suf:" "
+                $ fmt_fun_args c xargs $ fmt_opt fmt_cstr $ fmt "@ ->" ) )
         $ body
         $ closing_paren c ~offset:(-2)
         $ Cmts.fmt_after c arg.pexp_loc )
@@ -1871,10 +1872,12 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
                           ( fmt_args_grouped e0 e1N $ fmt "@ " $ cmts_outer
                           $ hvbox 2
                               ( fmt_label lbl ":@," $ cmts_inner $ fmt "(fun"
-                              $ fmt "@ "
-                              $ fmt_attributes c eN1.pexp_attributes ~suf:" "
-                              $ fmt_fun_args c xargs $ fmt_opt fmt_cstr
-                              $ fmt "@ ->" ) )
+                              $ fmt "@;<1 2>"
+                              $ hvbox 0
+                                  ( fmt_attributes c eN1.pexp_attributes
+                                      ~suf:" "
+                                  $ fmt_fun_args c xargs $ fmt_opt fmt_cstr
+                                  $ fmt "@ ->" ) ) )
                       $ fmt
                           ( match xbody.ast.pexp_desc with
                           | Pexp_function _ -> "@ "
