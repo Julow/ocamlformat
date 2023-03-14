@@ -7663,3 +7663,43 @@ let _ =
                                          eeee) -> FFFFFFFFF gg)
     ~h
 ;;
+
+let foo =
+  y
+  |> f
+       loooooooooooooooooooooooooooooooooooooooooooooooooooong
+       loooooooooooooooooooooooooooooooooooooooooooooooooooong
+       ~foo:(fun
+              loooooooooooooooooooooooooooooooooooooooooooooooooooong ->
+              loooooooooooooooooooooooooooooooooooooooooooooooooooong
+            )
+
+let foo =
+  f
+    loooooooooooooooooooooooooooooooooooooooooooooooooooong
+    loooooooooooooooooooooooooooooooooooooooooooooooooooong
+    ~foo:(fun
+           loooooooooooooooooooooooooooooooooooooooooooooooooooong ->
+           loooooooooooooooooooooooooooooooooooooooooooooooooooong
+         )
+
+let foo =
+  y
+  |> f
+       loooooooooooooooooooooooooooooooooooooooooooooooooooong
+       loooooooooooooooooooooooooooooooooooooooooooooooooooong
+       ~foo:(fun
+              loooooooooooooooooooooooooooooooooooooooooooooooooooong ->
+              loooooooooooooooooooooooooooooooooooooooooooooooooooong
+            )
+       ~bar
+
+let foo =
+  f
+    loooooooooooooooooooooooooooooooooooooooooooooooooooong
+    loooooooooooooooooooooooooooooooooooooooooooooooooooong
+    ~foo:(fun
+           loooooooooooooooooooooooooooooooooooooooooooooooooooong ->
+           loooooooooooooooooooooooooooooooooooooooooooooooooooong
+         )
+    ~bar
