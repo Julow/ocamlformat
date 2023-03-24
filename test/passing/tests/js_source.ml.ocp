@@ -10202,3 +10202,21 @@ val fooooooooooooooooooooooooooooooo
   : ( fooooooooooooooooooooooooooooooo
     , fooooooooooooooooooooooooooooooo )
       fooooooooooooooooooooooooooooooo
+
+module M = struct
+  let fooooooooooooooooooooo : fooooooooooooooooooooooooooooooo =
+    fun foo bar ->
+      let open Foo in
+      bar
+  ;;
+
+  (* ocp-indent bug: Inconsistent indentation for [fun] when value binding
+     located after a [type]. *)
+  type t
+
+  let fooooooooooooooooooooo : fooooooooooooooooooooooooooooooo =
+    fun foo bar ->
+    let open Foo in
+    bar
+  ;;
+end

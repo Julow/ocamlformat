@@ -556,6 +556,7 @@ let match_indent ?(default = 0) (c : Conf.t) ~parens ~(ctx : Ast.t) =
 let function_indent ?(default = 0) (c : Conf.t) ~parens ~xexp =
   match c.fmt_opts.function_indent_nested.v with
   | `Always -> c.fmt_opts.function_indent.v
+  | `Ocp_indent_compat -> 2
   | _
     when c.fmt_opts.ocp_indent_compat.v && parens
          && not (is_labelled_arg' xexp) ->

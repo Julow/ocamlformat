@@ -76,7 +76,8 @@ type fmt_opts =
   ; extension_indent: int elt
   ; field_space: [`Tight | `Loose | `Tight_decl] elt
   ; function_indent: int elt
-  ; function_indent_nested: [`Always | `Auto | `Never] elt
+  ; function_indent_nested:
+      [`Always | `Auto | `Never | `Ocp_indent_compat] elt
   ; if_then_else:
       [`Compact | `Fit_or_vertical | `Keyword_first | `K_R | `Vertical] elt
   ; indent_after_in: int elt

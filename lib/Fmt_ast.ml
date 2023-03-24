@@ -175,6 +175,16 @@ module Box = struct
       0 k
 end
 
+(** Indentation is different for function inside a sub-module. *)
+let ocp_indent_compat_module_binding c =
+  if c.conf.fmt_opts.ocp_indent_compat.v then
+    let fmt_opts =
+      { c.conf.fmt_opts with
+        function_indent_nested= Conf.Elt.make `Ocp_indent_compat `Default }
+    in
+    {c with conf= {c.conf with fmt_opts}}
+  else c
+
 (* Debug: catch and report failures at nearest enclosing Ast.t *)
 
 let protect =
@@ -4424,6 +4434,7 @@ and fmt_value_binding c ~rec_flag ?ext ?in_ ?epi _ctx
 and fmt_module_binding ?ext c ctx ~rec_flag ~first pmb =
   update_config_maybe_disabled c pmb.pmb_loc pmb.pmb_attributes
   @@ fun c ->
+  let c = ocp_indent_compat_module_binding c in
   let ext = if first then ext else None in
   let keyword = if first then "module" else "and" in
   let xargs, xbody =

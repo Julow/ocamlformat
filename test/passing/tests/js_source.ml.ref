@@ -2458,8 +2458,8 @@ struct
 
   let f : int S.t ab -> float S.t ab -> string =
     fun (l : int S.t ab) (r : float S.t ab) ->
-    match l, r with
-    | A, B -> "f A B"
+      match l, r with
+      | A, B -> "f A B"
   ;;
 end
 
@@ -2476,8 +2476,8 @@ struct
 
   let f : a S.t ab -> b S.t ab -> string =
     fun l r ->
-    match l, r with
-    | A, B -> "f A B"
+      match l, r with
+      | A, B -> "f A B"
   ;;
 end
 
@@ -10202,3 +10202,21 @@ val fooooooooooooooooooooooooooooooo
   : ( fooooooooooooooooooooooooooooooo
     , fooooooooooooooooooooooooooooooo )
       fooooooooooooooooooooooooooooooo
+
+module M = struct
+  let fooooooooooooooooooooo : fooooooooooooooooooooooooooooooo =
+    fun foo bar ->
+      let open Foo in
+      bar
+  ;;
+
+  (* ocp-indent bug: Inconsistent indentation for [fun] when value binding
+     located after a [type]. *)
+  type t
+
+  let fooooooooooooooooooooo : fooooooooooooooooooooooooooooooo =
+    fun foo bar ->
+      let open Foo in
+      bar
+  ;;
+end
