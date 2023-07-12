@@ -72,9 +72,8 @@ module Let_binding : sig
     ; lb_attrs: attribute list
     ; lb_loc: Location.t }
 
-  val of_let_binding : Cmts.t -> ctx:Ast.t -> first:bool -> let_binding -> t
-
-  val of_let_bindings : Cmts.t -> ctx:Ast.t -> let_binding list -> t list
-
   val of_binding_ops : Cmts.t -> ctx:Ast.t -> binding_op list -> t list
+
+  (** Partition '@'-attributes and '@@'-attributes. *)
+  val partition_attributes : let_binding_desc -> attributes -> attributes * attributes
 end

@@ -607,3 +607,22 @@ module Align = struct
     in
     hvbox_if align 0 t
 end
+
+module Lb = struct
+let lb_expr = function
+  | Plb_pun _ -> None
+  | Plb_poly (_, _, _, expr)
+  | Plb_newtype (_, _, _, expr)
+  | Plb_constraint (_, _, expr)
+  | Plb_pat (_, expr) -> Some expr.pexp_desc
+
+let indent (c : Conf.t) ~ctx lb_desc =
+  match lb_expr lb_desc with
+    | Some (Pexp_function _) ->
+        function_indent c ~ctx
+          ~default:c.fmt_opts.let_binding_indent.v
+    | Some (Pexp_fun _ | Pexp_newtype _)
+      when c.fmt_opts.let_binding_deindent_fun.v ->
+        max (c.fmt_opts.let_binding_indent.v - 1) 0
+  | _ -> c.fmt_opts.let_binding_indent.v
+end

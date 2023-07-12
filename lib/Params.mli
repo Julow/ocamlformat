@@ -162,3 +162,8 @@ module Align : sig
   val function_ :
     Conf.t -> parens:bool -> ctx0:Ast.t -> self:expression -> Fmt.t -> Fmt.t
 end
+
+(** Let bindings *)
+module Lb : sig
+val indent : Conf.t -> ctx:Ast.t -> let_binding_desc -> int
+end

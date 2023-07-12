@@ -1298,6 +1298,15 @@ end = struct
       | PStr [{pstr_desc= Pstr_eval (e, _); _}] -> e == exp
       | _ -> false
     in
+    let check_let_binding lb =
+      match lb.lb_desc with
+      | Plb_pun _ -> false
+      | Plb_poly (_, _, _, expr)
+      | Plb_newtype (_, _, _, expr)
+      | Plb_constraint (_, _, expr)
+      | Plb_pat (_, expr) -> expr == exp
+    in
+    let check_let_bindings lbs = List.exists lbs ~f:check_let_binding in
     match ctx with
     | Pld (PPat (_, Some e1)) -> assert (e1 == exp)
     | Pld _ -> assert false
@@ -1312,8 +1321,7 @@ end = struct
         | Pexp_object _ -> assert false
         | Pexp_let ({lbs_bindings; _}, e) ->
             assert (
-              List.exists lbs_bindings ~f:(fun {lb_expression; _} ->
-                  lb_expression == exp )
+              check_let_bindings lbs_bindings
               || e == exp )
         | Pexp_letop {let_; ands; body} ->
             let f {pbop_exp; _} = pbop_exp == exp in
@@ -1376,16 +1384,14 @@ end = struct
         | Pexp_for (_, e1, e2, _, e3) ->
             assert (e1 == exp || e2 == exp || e3 == exp)
         | Pexp_override e1N -> assert (List.exists e1N ~f:snd_f) )
-    | Lb x -> assert (x.lb_expression == exp)
+    | Lb x -> assert (check_let_binding x)
     | Mb _ -> assert false
     | Md _ -> assert false
     | Str str -> (
       match str.pstr_desc with
       | Pstr_eval (e0, _) -> assert (e0 == exp)
       | Pstr_value {lbs_bindings; _} ->
-          assert (
-            List.exists lbs_bindings ~f:(fun {lb_expression; _} ->
-                lb_expression == exp ) )
+          assert (check_let_bindings lbs_bindings)
       | Pstr_extension ((_, ext), _) -> assert (check_extensions ext)
       | Pstr_primitive _ | Pstr_type _ | Pstr_typext _ | Pstr_exception _
        |Pstr_module _ | Pstr_recmodule _ | Pstr_modtype _ | Pstr_open _
@@ -1402,8 +1408,7 @@ end = struct
           | Pcl_structure _ -> false
           | Pcl_apply (_, l) -> List.exists l ~f:(fun (_, e) -> e == exp)
           | Pcl_let ({lbs_bindings; _}, _) ->
-              List.exists lbs_bindings ~f:(fun {lb_expression; _} ->
-                  lb_expression == exp )
+              check_let_bindings lbs_bindings
           | Pcl_constraint _ -> false
           | Pcl_extension _ -> false
           | Pcl_open _ -> false
@@ -1881,9 +1886,7 @@ end = struct
         | Str {pstr_desc= Pstr_value {lbs_bindings; _}; _} )
       , _ ) ->
         List.exists lbs_bindings ~f:(function
-          | {lb_pattern; lb_expression= {pexp_desc= Pexp_constraint _; _}; _}
-            ->
-              lb_pattern == pat
+          | {lb_desc = Plb_pat (pat', _); _} -> pat' == pat
           | _ -> false )
     | _ -> false
 
@@ -2093,7 +2096,7 @@ end = struct
           { pstr_desc=
               Pstr_value
                 { lbs_rec= Nonrecursive
-                ; lbs_bindings= [{lb_pattern= {ppat_desc= Ppat_any; _}; _}]
+                ; lbs_bindings= [{lb_desc= Plb_pat ({ppat_desc= Ppat_any; _}, _); _}]
                 ; _ }
           ; _ }
       , _ ) ->
