@@ -1064,12 +1064,21 @@ and structure_item_desc =
 
 and let_binding =
   {
-    lb_pattern: pattern;
-    lb_expression: expression;
-    lb_is_pun: bool;
+    lb_desc: let_binding_desc;
     lb_attributes: attributes;
     lb_loc: Location.t;
   }
+
+and let_binding_desc =
+  | Plb_pun of string loc  (** [let s] (parsed only inside an extension) *)
+  | Plb_poly of string loc * string loc list * core_type * expression
+      (** [let s : 'a. typ = exp]. *)
+  | Plb_newtype of string loc * string loc list * core_type * expression
+      (** [let s : type a. typ = exp] *)
+  | Plb_constraint of string loc * core_type * expression
+      (** [let s : typ = exp] *)
+  | Plb_pat of pattern * expression
+      (** [let pat = exp] or [let pat : typ = exp] when [pat] is not a ident. *)
 
 and let_bindings =
   {

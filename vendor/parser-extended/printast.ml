@@ -1080,8 +1080,28 @@ and include_declaration i ppf x =
 and let_binding i ppf x =
   line i ppf "<def> %a\n" fmt_location x.lb_loc;
   attributes (i+1) ppf x.lb_attributes;
-  pattern (i+1) ppf x.lb_pattern;
-  expression (i+1) ppf x.lb_expression
+  let_binding_desc (i+1) ppf x.lb_desc
+
+and let_binding_desc i ppf = function
+  | Plb_pun id -> line i ppf "Plb_pun %a" fmt_string_loc id
+  | Plb_poly (id, vars, typ, exp) ->
+      line i ppf "Plb_poly %a" fmt_string_loc id;
+      list i (fun i ppf -> line i ppf "%a" fmt_string_loc) ppf vars;
+      core_type i ppf typ;
+      expression i ppf exp
+  | Plb_newtype (id, newtypes, typ, exp) ->
+      line i ppf "Plb_newtype %a" fmt_string_loc id;
+      list i (fun i ppf -> line i ppf "%a" fmt_string_loc) ppf newtypes;
+      core_type i ppf typ;
+      expression i ppf exp
+  | Plb_constraint (id, typ, exp) ->
+      line i ppf "Plb_constraint %a" fmt_string_loc id;
+      core_type i ppf typ;
+      expression i ppf exp
+  | Plb_pat (pat, exp) ->
+      line i ppf "Plb_pat";
+      pattern i ppf pat;
+      expression i ppf exp
 
 and let_bindings i ppf x =
   list i let_binding ppf x.lbs_bindings

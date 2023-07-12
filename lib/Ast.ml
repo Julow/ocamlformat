@@ -1187,9 +1187,12 @@ end = struct
       | Ppat_constraint (p, _) -> p == pat
       | _ -> false
     in
-    let check_bindings l =
-      List.exists l ~f:(fun {lb_pattern; _} -> check_subpat lb_pattern)
+    let check_binding {lb_desc;_} =
+      match lb_desc with
+      | Plb_pat (pat, _) -> check_subpat pat
+      | _ -> false
     in
+    let check_bindings l = List.exists l ~f:check_binding in
     match ctx with
     | Pld (PPat (p1, _)) -> assert (p1 == pat)
     | Pld _ -> assert false
@@ -1248,7 +1251,8 @@ end = struct
               | _ -> false ) )
       | Pexp_for (p, _, _, _, _) | Pexp_fun (_, _, p, _) -> assert (p == pat)
       )
-    | Lb x -> assert (x.lb_pattern == pat)
+    | Lb {lb_desc = Plb_pat (pat', _); _} -> assert (pat' == pat)
+    | Lb _ -> assert false
     | Mb _ -> assert false
     | Md _ -> assert false
     | Cl ctx ->

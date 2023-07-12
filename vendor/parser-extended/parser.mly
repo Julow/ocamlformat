@@ -353,20 +353,19 @@ let extra_rhs_core_type ct ~pos =
   let docs = rhs_info pos in
   { ct with ptyp_attributes = add_info_attrs docs ct.ptyp_attributes }
 
-let mklb first ~loc (p, e, is_pun) attrs =
+let mklb first ~loc desc attrs =
   let docs = symbol_docs loc in
   let text = if first then empty_text else symbol_text (fst loc) in
   {
-    lb_pattern = p;
-    lb_expression = e;
-    lb_is_pun = is_pun;
+    lb_desc = desc;
     lb_attributes = add_text_attrs text (add_docs_attrs docs attrs);
     lb_loc = make_loc loc;
   }
 
 let addlb lbs lb =
-  if lb.lb_is_pun && lbs.lbs_extension = None then syntax_error ();
-  { lbs with lbs_bindings = lb :: lbs.lbs_bindings }
+  match lb.lb_desc, lbs.lbs_extension with
+  | Plb_pun _, None -> syntax_error ()
+  | _ -> { lbs with lbs_bindings = lb :: lbs.lbs_bindings }
 
 let mklbs ext rf lb =
   let lbs = {
@@ -2349,12 +2348,15 @@ labeled_simple_expr:
   xs = mkrhs(LIDENT)+
     { xs }
 ;
-%inline let_ident:
+%inline let_ident_pat:
     val_ident { mkpatvar ~loc:$sloc $1 }
 ;
+%inline let_ident:
+    mkrhs(val_ident) { $1 }
+;
 let_binding_body_no_punning:
-    let_ident strict_binding
-      { ($1, $2) }
+    let_ident_pat strict_binding
+      { Plb_pat ($1, $2) }
   | let_ident type_constraint EQUAL seq_expr
       { let v = $1 in (* PR#7344 *)
         let t =
@@ -2363,33 +2365,23 @@ let_binding_body_no_punning:
           | _, Some t -> t
           | _ -> assert false
         in
-        let loc = Location.(t.ptyp_loc.loc_start, t.ptyp_loc.loc_end) in
-        let typ = ghtyp ~loc (Ptyp_poly([],t)) in
-        let patloc = ($startpos($1), $endpos($2)) in
-        (ghpat ~loc:patloc (Ppat_constraint(v, typ)),
-         mkexp_constraint ~loc:$sloc $4 $2) }
-  | let_ident COLON poly(core_type) EQUAL seq_expr
-      { let patloc = ($startpos($1), $endpos($3)) in
-        (ghpat ~loc:patloc
-           (Ppat_constraint($1, ghtyp ~loc:($loc($3)) $3)),
-         $5) }
+        Plb_constraint (v, t, $4) }
+  | let_ident COLON typevar_list DOT core_type EQUAL seq_expr
+      { Plb_poly ($1, $3, $5, $7) }
   | let_ident COLON TYPE lident_list DOT core_type EQUAL seq_expr
-      { let exp, poly =
-          wrap_type_annotation ~loc:$sloc $4 $6 $8 in
-        let loc = ($startpos($1), $endpos($6)) in
-        (ghpat ~loc (Ppat_constraint($1, poly)), exp) }
+      { Plb_newtype ($1, $4, $6, $8) }
   | pattern_no_exn EQUAL seq_expr
-      { ($1, $3) }
+      { Plb_pat ($1, $3) }
   | simple_pattern_not_ident COLON core_type EQUAL seq_expr
       { let loc = ($startpos($1), $endpos($3)) in
-        (ghpat ~loc (Ppat_constraint($1, $3)), $5) }
+        Plb_pat (ghpat ~loc (Ppat_constraint($1, $3)), $5) }
 ;
 let_binding_body:
   | let_binding_body_no_punning
-      { let p,e = $1 in (p,e,false) }
+      { $1 }
 /* BEGIN AVOID */
-  | val_ident %prec below_HASH
-      { (mkpatvar ~loc:$loc $1, mkexpvar ~loc:$loc $1, true) }
+  | let_ident %prec below_HASH
+      { Plb_pun $1 }
   (* The production that allows puns is marked so that [make list-parse-errors]
      does not attempt to exploit it. That would be problematic because it
      would then generate bindings such as [let x], which are rejected by the
@@ -2407,25 +2399,25 @@ let_bindings(EXT):
   ext = EXT
   attrs1 = attributes
   rec_flag = rec_flag
-  body = let_binding_body
+  desc = let_binding_body
   attrs2 = post_item_attributes
     {
       let attrs = attrs1 @ attrs2 in
-      mklbs ext rec_flag (mklb ~loc:$sloc true body attrs)
+      mklbs ext rec_flag (mklb ~loc:$sloc true desc attrs)
     }
 ;
 and_let_binding:
   AND
   attrs1 = attributes
-  body = let_binding_body
+  desc = let_binding_body
   attrs2 = post_item_attributes
     {
       let attrs = attrs1 @ attrs2 in
-      mklb ~loc:$sloc false body attrs
+      mklb ~loc:$sloc false desc attrs
     }
 ;
 letop_binding_body:
-    pat = let_ident exp = strict_binding
+    pat = let_ident_pat exp = strict_binding
       { (pat, exp) }
   | val_ident
       (* Let-punning *)

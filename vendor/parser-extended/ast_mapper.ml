@@ -598,17 +598,36 @@ module E = struct
 end
 
 module LB = struct
-  let map_let_binding sub { lb_pattern; lb_expression; lb_is_pun; lb_attributes; lb_loc } =
-    let lb_pattern = sub.pat sub lb_pattern in
-    let lb_expression = sub.expr sub lb_expression in
+  let map_locs sub = List.map (map_loc sub)
+
+  let map_lb_desc sub = function
+    | Plb_pun id -> Plb_pun (map_loc sub id)
+    | Plb_poly (id, vars, typ, exp) ->
+        Plb_poly
+          ( map_loc sub id
+          , map_locs sub vars
+          , sub.typ sub typ
+          , sub.expr sub exp )
+    | Plb_newtype (id, newtypes, typ, exp) ->
+        Plb_newtype
+          ( map_loc sub id
+          , map_locs sub newtypes
+          , sub.typ sub typ
+          , sub.expr sub exp )
+    | Plb_constraint (id, typ, exp) ->
+        Plb_constraint (map_loc sub id, sub.typ sub typ, sub.expr sub exp)
+    | Plb_pat (pat, exp) -> Plb_pat (sub.pat sub pat, sub.expr sub exp)
+
+  let map_let_binding sub {lb_desc; lb_attributes; lb_loc} =
+    let lb_desc = map_lb_desc sub lb_desc in
     let lb_attributes = sub.attributes sub lb_attributes in
     let lb_loc = sub.location sub lb_loc in
-    { lb_pattern; lb_expression; lb_is_pun; lb_attributes; lb_loc }
+    {lb_desc; lb_attributes; lb_loc}
 
-  let map_let_bindings sub { lbs_bindings; lbs_rec; lbs_extension } =
+  let map_let_bindings sub {lbs_bindings; lbs_rec; lbs_extension} =
     let lbs_bindings = List.map (sub.let_binding sub) lbs_bindings in
     let lbs_extension = map_opt (map_loc sub) lbs_extension in
-    { lbs_bindings; lbs_rec; lbs_extension }
+    {lbs_bindings; lbs_rec; lbs_extension}
 end
 
 module P = struct
