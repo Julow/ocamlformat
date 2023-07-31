@@ -18,11 +18,15 @@ end
 module Misc : sig
   include module type of Misc
 
-  module Color : sig
-    include module type of Color
+  (** @since ocaml-5.2.0 *)
+  module Style : sig
+    type setting
 
     val default_setting : setting
-    (** @since ocaml-4.09 *)
+    val setup : setting option -> unit
+
+    val as_inline_code: (Format.formatter -> 'a -> unit as 'printer) -> 'printer
+    val inline_code: Format.formatter -> string -> unit
   end
 
   module Error_style : sig
@@ -46,7 +50,7 @@ module Clflags : sig
   val for_package : string option ref
   val transparent_modules : bool ref
   val locations : bool ref
-  val color : Misc.Color.setting option ref
+  val color : Misc.Style.setting option ref
   val error_style : Misc.Error_style.setting option ref
   val unboxed_types : bool ref
   val no_std_include : bool ref

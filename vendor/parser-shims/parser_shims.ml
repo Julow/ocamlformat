@@ -20,10 +20,18 @@ end
 module Misc = struct
   include Misc
 
-  module Color = struct
-    include Color
+  module Style = struct
+    type setting = unit
 
-    let default_setting = Auto
+    let default_setting = ()
+    let setup _ = ()
+
+    let as_inline_code printer ppf x =
+      Format.pp_open_stag ppf (Format.String_tag "inline_code");
+      printer ppf x;
+      Format.pp_close_stag ppf ()
+
+    let inline_code ppf s = as_inline_code Format.pp_print_string ppf s
   end
 
   module Error_style = struct
