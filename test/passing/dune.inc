@@ -4427,6 +4427,24 @@
  (deps tests/.ocamlformat )
  (package ocamlformat)
  (action
+  (with-stdout-to rawidents.ml.stdout
+   (with-stderr-to rawidents.ml.stderr
+     (run %{bin:ocamlformat} --margin-check %{dep:tests/rawidents.ml})))))
+
+(rule
+ (alias runtest)
+ (package ocamlformat)
+ (action (diff tests/rawidents.ml.ref rawidents.ml.stdout)))
+
+(rule
+ (alias runtest)
+ (package ocamlformat)
+ (action (diff tests/rawidents.ml.err rawidents.ml.stderr)))
+
+(rule
+ (deps tests/.ocamlformat )
+ (package ocamlformat)
+ (action
   (with-stdout-to recmod.mli.stdout
    (with-stderr-to recmod.mli.stderr
      (run %{bin:ocamlformat} --margin-check %{dep:tests/recmod.mli})))))
