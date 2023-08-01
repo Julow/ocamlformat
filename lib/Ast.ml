@@ -919,7 +919,8 @@ end = struct
             List.exists fields ~f:(function
               | {pof_desc= Otag (_, t1); _} -> typ == t1
               | {pof_desc= Oinherit t1; _} -> typ == t1 ) )
-      | Ptyp_class (_, l) -> assert (List.exists l ~f) )
+      | Ptyp_class (_, l) -> assert (List.exists l ~f)
+      | Ptyp_open (_, t) -> assert (f t) )
     | Td {ptype_params; ptype_cstrs; ptype_kind; ptype_manifest; _} ->
         assert (
           List.exists ptype_params ~f:fst_f
@@ -1561,7 +1562,8 @@ end = struct
       | Ptyp_constr (_, _ :: _ :: _) -> Some (Comma, Non)
       | Ptyp_constr _ -> Some (Apply, Non)
       | Ptyp_any | Ptyp_var _ | Ptyp_object _ | Ptyp_class _
-       |Ptyp_variant _ | Ptyp_poly _ | Ptyp_package _ | Ptyp_extension _ ->
+       |Ptyp_variant _ | Ptyp_poly _ | Ptyp_package _ | Ptyp_extension _
+       |Ptyp_open _ ->
           None )
     | {ctx= Cty {pcty_desc; _}; ast= Typ typ; _} -> (
       match pcty_desc with
@@ -1673,7 +1675,8 @@ end = struct
       | Ptyp_tuple _ -> Some InfixOp3
       | Ptyp_alias _ -> Some As
       | Ptyp_any | Ptyp_var _ | Ptyp_constr _ | Ptyp_object _
-       |Ptyp_class _ | Ptyp_variant _ | Ptyp_poly _ | Ptyp_extension _ ->
+       |Ptyp_class _ | Ptyp_variant _ | Ptyp_poly _ | Ptyp_extension _
+       |Ptyp_open _ ->
           None )
     | Td _ -> None
     | Cty {pcty_desc; _} -> (

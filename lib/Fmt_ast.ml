@@ -898,6 +898,9 @@ and fmt_core_type c ?(box = true) ?pro ?(pro_space = true) ?constraint_ctx
            (sub_typ ~ctx >> fmt_core_type c) )
       $ fmt "@ "
       $ fmt_longident_loc c ~pre:"#" lid
+  | Ptyp_open (lid, typ) ->
+      fmt_longident_loc c lid
+      $ wrap_fits_breaks c.conf ".(" ")" (fmt_core_type c (sub_typ ~ctx typ))
 
 and fmt_package_type c ctx cnstrs =
   let fmt_cstr ~first ~last:_ (lid, typ) =

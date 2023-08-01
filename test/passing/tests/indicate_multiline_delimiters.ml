@@ -53,3 +53,8 @@ let x =
       left_node.right <- lr_left ;
       root_node.left <- lr_right ;
       lr_node.right <- tree
+
+type t =
+  M.( fooooooooooooooooooooooooooooooooooooooooooo
+      * fooooooooooooooooooooooooooooooooooooooooooo )
+  * c

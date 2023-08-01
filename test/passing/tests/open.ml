@@ -281,3 +281,6 @@ let _ =
       (* we have an absoluteURI *)
       Uri.(
         match path uri with "" -> with_path uri "/" | _ -> uri))
+
+type t = M.(a * b)
+type t = M.(fooooooooooooooooooooooooooooooooooooooooooo * fooooooooooooooooooooooooooooooooooooooooooo) * c
