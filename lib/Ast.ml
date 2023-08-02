@@ -135,8 +135,8 @@ module Exp = struct
 
   let has_trailing_attributes {pexp_desc; pexp_attributes; _} =
     match pexp_desc with
-    | Pexp_fun _ | Pexp_function _ | Pexp_ifthenelse _ | Pexp_match _
-     |Pexp_newtype _ | Pexp_try _ ->
+    | Pexp_function _ | Pexp_ifthenelse _ | Pexp_match _ | Pexp_newtype _
+     |Pexp_try _ ->
         false
     | _ -> List.exists pexp_attributes ~f:(Fn.non Attr.is_doc)
 
@@ -170,12 +170,13 @@ module Exp = struct
      |( {pexp_desc= Pexp_sequence _; _}
       , (Non_apply | Sequence | Then | ThenElse) )
      |( { pexp_desc=
-            ( Pexp_function _ | Pexp_match _ | Pexp_try _
-            | Pexp_fun (_, _, _, {pexp_desc= Pexp_constraint _; _}) )
+            ( Pexp_function (_, _, Pfunction_cases _)
+            | Pexp_match _ | Pexp_try _ )
         ; _ }
       , (Match | Let_match | Non_apply) )
      |( { pexp_desc=
-            ( Pexp_fun _ | Pexp_let _ | Pexp_letop _ | Pexp_letexception _
+            ( Pexp_function (_, _, Pfunction_body _)
+            | Pexp_let _ | Pexp_letop _ | Pexp_letexception _
             | Pexp_letmodule _ | Pexp_newtype _ | Pexp_open _
             | Pexp_letopen _ )
         ; _ }
@@ -755,6 +756,8 @@ module rec In_ctx : sig
 
   val sub_exp : ctx:T.t -> expression -> expression xt
 
+  val sub_funp : ctx:T.t -> function_param -> function_param xt
+
   val sub_cl : ctx:T.t -> class_expr -> class_expr xt
 
   val sub_cf : ctx:T.t -> class_field -> class_field xt
@@ -788,6 +791,8 @@ end = struct
   let sub_pat ~ctx pat = check parenze_pat {ctx; ast= pat}
 
   let sub_exp ~ctx exp = check parenze_exp {ctx; ast= exp}
+
+  let sub_funp ~ctx funp = {ctx; ast= funp}
 
   let sub_cl ~ctx cl = {ctx; ast= cl}
 
@@ -860,6 +865,11 @@ end = struct
     let f tI = typ == tI in
     let fst_f (tI, _) = typ == tI in
     let snd_f (_, tI) = typ == tI in
+    let check_type_constraint_opt = function
+      | Some (Pconstraint t) -> t == typ
+      | Some (Pcoerce (t1, t2)) -> Option.exists t1 ~f || t2 == typ
+      | None -> false
+    in
     let check_cstr = function
       | Pcstr_tuple t1N -> List.exists t1N ~f
       | Pcstr_record (_, ld1N) ->
@@ -968,6 +978,7 @@ end = struct
             List.exists en1 ~f:(fun (_, (t1, t2), _) ->
                 Option.exists t1 ~f || Option.exists t2 ~f ) )
       | Pexp_let (lbs, _) -> assert (check_let_bindings lbs)
+      | Pexp_function (_, t, _) -> assert (check_type_constraint_opt t)
       | _ -> assert false )
     | Lb _ -> assert false
     | Mb _ -> assert false
@@ -1049,7 +1060,8 @@ end = struct
               let rec loop = function
                 | {pexp_desc= Pexp_newtype (_, e); _} -> loop e
                 | {pexp_desc= Pexp_constraint (_, t); _} -> t == typ
-                | {pexp_desc= Pexp_fun (_, _, _, e); _} -> loop e
+                | {pexp_desc= Pexp_function (_, t, Pfunction_body e); _} ->
+                    check_type_constraint_opt t || loop e
                 | _ -> false
               in
               (match topt with None -> false | Some t -> typ == t)
@@ -1212,6 +1224,19 @@ end = struct
     let check_bindings l =
       List.exists l ~f:(fun {pvb_pat; _} -> check_subpat pvb_pat)
     in
+    let check_cases l =
+      List.exists l ~f:(function
+        | {pc_lhs; _} when pc_lhs == pat -> true
+        | _ -> false )
+    in
+    let check_function_body = function
+      | Pfunction_body _ -> false
+      | Pfunction_cases (cases, _, _) -> check_cases cases
+    in
+    let check_function_param = function
+      | Pparam_val (_, _, p) -> p == pat
+      | Pparam_newtype _ -> false
+    in
     match ctx with
     | Pld (PPat (p1, _)) -> assert (p1 == pat)
     | Pld _ -> assert false
@@ -1263,13 +1288,13 @@ end = struct
       | Pexp_letop {let_; ands; _} ->
           let f {pbop_pat; _} = check_subpat pbop_pat in
           assert (f let_ || List.exists ~f ands)
-      | Pexp_function cases | Pexp_match (_, cases) | Pexp_try (_, cases) ->
+      | Pexp_function (params, _, body) ->
           assert (
-            List.exists cases ~f:(function
-              | {pc_lhs; _} when pc_lhs == pat -> true
-              | _ -> false ) )
-      | Pexp_for (p, _, _, _, _) | Pexp_fun (_, _, p, _) -> assert (p == pat)
-      )
+            List.exists params ~f:check_function_param
+            || check_function_body body )
+      | Pexp_match (_, cases) | Pexp_try (_, cases) ->
+          assert (check_cases cases)
+      | Pexp_for (p, _, _, _, _) -> assert (p == pat) )
     | Lb x -> assert (x.pvb_pat == pat)
     | Mb _ -> assert false
     | Md _ -> assert false
@@ -1316,6 +1341,19 @@ end = struct
       | PStr [{pstr_desc= Pstr_eval (e, _); _}] -> e == exp
       | _ -> false
     in
+    let check_cases cases =
+      List.exists cases ~f:(function
+        | {pc_guard= Some g; _} when g == exp -> true
+        | {pc_rhs; _} when pc_rhs == exp -> true
+        | _ -> false )
+    in
+    let check_function_param = function
+      | Pparam_val (_, Some e, _) -> e == exp
+      | _ -> false
+    and check_function_body = function
+      | Pfunction_body e -> e == exp
+      | Pfunction_cases (cases, _, _) -> check_cases cases
+    in
     match ctx with
     | Pld (PPat (_, Some e1)) -> assert (e1 == exp)
     | Pld _ -> assert false
@@ -1337,15 +1375,12 @@ end = struct
             let f {pbop_exp; _} = pbop_exp == exp in
             assert (f let_ || List.exists ~f ands || body == exp)
         | (Pexp_match (e, _) | Pexp_try (e, _)) when e == exp -> ()
-        | Pexp_function cases | Pexp_match (_, cases) | Pexp_try (_, cases)
-          ->
+        | Pexp_function (params, _, body) ->
             assert (
-              List.exists cases ~f:(function
-                | {pc_guard= Some g; _} when g == exp -> true
-                | {pc_rhs; _} when pc_rhs == exp -> true
-                | _ -> false ) )
-        | Pexp_fun (_, default, _, body) ->
-            assert (Option.value_map default ~default:false ~f || body == exp)
+              List.exists params ~f:check_function_param
+              || check_function_body body )
+        | Pexp_match (_, cases) | Pexp_try (_, cases) ->
+            assert (check_cases cases)
         | Pexp_indexop_access {pia_lhs; pia_kind= Builtin idx; pia_rhs; _} ->
             assert (
               pia_lhs == exp || idx == exp
@@ -1452,7 +1487,9 @@ end = struct
                 match x with
                 | {pexp_desc= Pexp_newtype (_, e); _} -> loop e
                 | {pexp_desc= Pexp_constraint (e, _); _} -> loop e
-                | {pexp_desc= Pexp_fun (_, _, _, e); _} -> loop e
+                | {pexp_desc= Pexp_function (params, _, body); _} ->
+                    List.exists params ~f:check_function_param
+                    || check_function_body body
                 | _ -> false
               in
               loop e
@@ -1868,7 +1905,7 @@ end = struct
                 ( Ppat_construct _ | Ppat_exception _ | Ppat_or _
                 | Ppat_lazy _ | Ppat_tuple _ | Ppat_variant _ | Ppat_list _ )
             ; _ }
-        | Exp {pexp_desc= Pexp_fun _; _} )
+        | Exp {pexp_desc= Pexp_function _; _} )
       , Ppat_alias _ )
      |( Pat {ppat_desc= Ppat_lazy _; _}
       , ( Ppat_construct _ | Ppat_cons _
@@ -1884,14 +1921,14 @@ end = struct
      |Pat {ppat_desc= Ppat_tuple _; _}, Ppat_tuple _
      |Pat _, Ppat_lazy _
      |Pat _, Ppat_exception _
-     |Exp {pexp_desc= Pexp_fun _; _}, Ppat_or _
+     |Exp {pexp_desc= Pexp_function _; _}, Ppat_or _
      |Cl {pcl_desc= Pcl_fun _; _}, Ppat_variant (_, Some _)
      |Cl {pcl_desc= Pcl_fun _; _}, Ppat_tuple _
      |Cl {pcl_desc= Pcl_fun _; _}, Ppat_construct _
      |Cl {pcl_desc= Pcl_fun _; _}, Ppat_alias _
      |Cl {pcl_desc= Pcl_fun _; _}, Ppat_lazy _
      |Exp {pexp_desc= Pexp_letop _; _}, Ppat_exception _
-     |( Exp {pexp_desc= Pexp_fun _; _}
+     |( Exp {pexp_desc= Pexp_function _; _}
       , ( Ppat_construct _ | Ppat_cons _ | Ppat_lazy _ | Ppat_tuple _
         | Ppat_variant _ ) ) ->
         true
@@ -1940,7 +1977,7 @@ end = struct
         match exp.pexp_desc with
         | Pexp_assert e
          |Pexp_construct (_, Some e)
-         |Pexp_fun (_, _, _, e)
+         |Pexp_function (_, _, Pfunction_body e)
          |Pexp_ifthenelse (_, Some e)
          |Pexp_prefix (_, e)
          |Pexp_infix (_, _, e)
@@ -1969,8 +2006,9 @@ end = struct
           match cls with Match | Then | ThenElse -> continue e | _ -> false )
         | Pexp_match _ when match cls with Then -> true | _ -> false ->
             false
-        | Pexp_function cases | Pexp_match (_, cases) | Pexp_try (_, cases)
-          ->
+        | Pexp_function (_, _, Pfunction_cases (cases, _, _))
+         |Pexp_match (_, cases)
+         |Pexp_try (_, cases) ->
             continue (List.last_exn cases).pc_rhs
         | Pexp_apply (_, args) -> continue (snd (List.last_exn args))
         | Pexp_tuple es -> continue (List.last_exn es)
@@ -2023,7 +2061,7 @@ end = struct
        |Pexp_newtype (_, e)
        |Pexp_open (_, e)
        |Pexp_letopen (_, e)
-       |Pexp_fun (_, _, _, e)
+       |Pexp_function (_, _, Pfunction_body e)
        |Pexp_sequence (_, e)
        |Pexp_setfield (_, _, e)
        |Pexp_setinstvar (_, e)
@@ -2039,13 +2077,16 @@ end = struct
       | Pexp_extension (ext, PStr [{pstr_desc= Pstr_eval (e, _); _}])
         when Source.extension_using_sugar ~name:ext ~payload:e.pexp_loc -> (
         match e.pexp_desc with
-        | Pexp_function cases | Pexp_match (_, cases) | Pexp_try (_, cases)
-          ->
+        | Pexp_function (_, _, Pfunction_cases (cases, _, _))
+         |Pexp_match (_, cases)
+         |Pexp_try (_, cases) ->
             List.iter cases ~f:(fun case ->
                 mark_parenzed_inner_nested_match case.pc_rhs ) ;
             true
         | _ -> continue e )
-      | Pexp_function cases | Pexp_match (_, cases) | Pexp_try (_, cases) ->
+      | Pexp_function (_, _, Pfunction_cases (cases, _, _))
+       |Pexp_match (_, cases)
+       |Pexp_try (_, cases) ->
           List.iter cases ~f:(fun case ->
               mark_parenzed_inner_nested_match case.pc_rhs ) ;
           true
@@ -2215,13 +2256,14 @@ end = struct
               [ { pstr_desc=
                     Pstr_eval
                       ( { pexp_desc=
-                            ( Pexp_function cases
+                            ( Pexp_function
+                                (_, _, Pfunction_cases (cases, _, _))
                             | Pexp_match (_, cases)
                             | Pexp_try (_, cases) )
                         ; _ }
                       , _ )
                 ; _ } ] )
-       |Pexp_function cases
+       |Pexp_function (_, _, Pfunction_cases (cases, _, _))
        |Pexp_match (_, cases)
        |Pexp_try (_, cases) ->
           if !leading_nested_match_parens then

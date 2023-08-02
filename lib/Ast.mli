@@ -155,6 +155,9 @@ val sub_pat : ctx:t -> pattern -> pattern xt
 val sub_exp : ctx:t -> expression -> expression xt
 (** Construct a expression-in-context. *)
 
+val sub_funp : ctx:t -> function_param -> function_param xt
+(** [function_param] in context. *)
+
 val sub_cl : ctx:t -> class_expr -> class_expr xt
 (** Construct a class_expr-in-context. *)
 
