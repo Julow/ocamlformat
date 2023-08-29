@@ -120,8 +120,7 @@ module Error = struct
             "%s: Cannot process %S.\n\
             \  Please report this bug at \
              https://github.com/ocaml-ppx/ocamlformat/issues.\n\
-             %!"
-            exe input_name ;
+             %!" exe input_name ;
           Format.fprintf fmt
             "  BUG: formatting did not stabilize after %i iterations.\n%!"
             iteration )
@@ -131,8 +130,7 @@ module Error = struct
           "%s: Cannot process %S.\n\
           \  Please report this bug at \
            https://github.com/ocaml-ppx/ocamlformat/issues.\n\
-           %!"
-          exe input_name ;
+           %!" exe input_name ;
         match exn with
         | Internal_error (errors, l) ->
             List.iter errors ~f:(print_internal_error ~debug ~quiet fmt) ;

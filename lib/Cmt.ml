@@ -68,12 +68,10 @@ let pp_error fs {kind; cmt_kind} =
         Location.print_loc (loc x) s_kind pp_cmt x
   | `Modified (x, y) -> (
       Format.fprintf fs
-        "%!@{<loc>%a@}:@,\
-         @{<error>Error@}: formatting of %s is unstable.\n\
+        "%!@{<loc>%a@}:@,@{<error>Error@}: formatting of %s is unstable.\n\
         \  before: %a\n\
         \   after: %a\n\
-         %!"
-        Location.print_loc (loc x) s_kind pp_cmt x pp_cmt y ;
+         %!" Location.print_loc (loc x) s_kind pp_cmt x pp_cmt y ;
       match cmt_kind with
       | `Comment -> ()
       | `Doc_comment ->

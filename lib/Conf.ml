@@ -716,8 +716,7 @@ module Formatting = struct
        `doc-comments-val=after` in combination with `doc-comments=after` \
        then only `doc-comments=after-when-possible` is now required to \
        achieve the same behavior. If you are using `doc-comments-val=unset` \
-       the same behavior can now be achieved by setting `doc-comments` \
-       only."
+       the same behavior can now be achieved by setting `doc-comments` only."
     in
     Decl.removed_option ~names ~since:V.v0_16 ~msg
 

@@ -249,6 +249,54 @@ let fmt_str_loc_opt c ?pre ?(default = "_") {txt; loc} =
 let variant_var c ({txt= x; loc} : variant_var) =
   Cmts.fmt c loc @@ (str "`" $ fmt_str_loc c x)
 
+let fmt_constant_string c ?epi loc =
+  let fmt_words ?epi s =
+    let words = String.split s ~on:' ' in
+    let fmt_word ~prev:_ curr ~next =
+      match next with
+      | Some "" -> str curr $ str " "
+      | Some _ -> str curr $ cbreak ~fits:("", 1, "") ~breaks:(" \\", 0, "")
+      | None -> str curr
+    in
+    hovbox_if (List.length words > 1) 0 (list_pn words fmt_word)
+    $ fmt_opt epi
+  in
+  let split_on pattern ?(pattern_repl = pattern) =
+    let pattern = String.Search_pattern.create pattern in
+    fun k ?epi s ->
+      let ls = String.Search_pattern.split_on pattern s in
+      hvbox_if (* (List.length ls > 1) *)
+        true 0
+        (list_pn ls (fun ~prev:_ s ~next ->
+             let epi = if Option.is_none next then epi else None in
+             let delim =
+               match next with
+               | Some next ->
+                   let break =
+                     if String.is_empty next then noop
+                     else if Char.equal next.[0] ' ' then
+                       cbreak ~fits:("", 0, "") ~breaks:("\\", -1, "\\")
+                     else cbreak ~fits:("", 0, "") ~breaks:("\\", 0, "")
+                   in
+                   str pattern_repl $ break
+               | None -> noop
+             in
+             k ?epi s $ delim ) )
+  in
+  let fmt_string_auto =
+    split_on "\n" ~pattern_repl:"\\n"
+    @@ split_on "\\n" @@ split_on "\\r" @@ split_on "@;" @@ split_on "@,"
+    @@ fmt_words
+  in
+  match c.conf.fmt_opts.break_string_literals.v with
+  | `Auto ->
+      let s = Source.string_literal c.source `Normalize loc in
+      let epi = str "\"" $ fmt_opt epi in
+      str "\"" $ fmt_string_auto ~epi s
+  | `Never ->
+      let s = Source.string_literal c.source `Preserve loc in
+      wrap "\"" "\"" (str s) $ fmt_opt epi
+
 let fmt_constant c ?epi {pconst_desc; pconst_loc= loc} =
   Cmts.fmt c loc
   @@
@@ -259,74 +307,8 @@ let fmt_constant c ?epi {pconst_desc; pconst_loc= loc} =
   | Pconst_string (s, loc', Some delim) ->
       Cmts.fmt c loc'
       @@ wrap_k (str ("{" ^ delim ^ "|")) (str ("|" ^ delim ^ "}")) (str s)
-  | Pconst_string (_, loc', None) -> (
-      let delim = ["@,"; "@;"] in
-      let contains_pp_commands s =
-        let is_substring substring = String.is_substring s ~substring in
-        List.exists delim ~f:is_substring
-      in
-      let fmt_string_auto ~break_on_newlines s =
-        let fmt_words ~epi s =
-          let words = String.split s ~on:' ' in
-          let fmt_word ~prev:_ curr ~next =
-            match next with
-            | Some "" -> str curr $ str " "
-            | Some _ ->
-                str curr $ cbreak ~fits:("", 1, "") ~breaks:(" \\", 0, "")
-            | None -> str curr
-          in
-          hovbox_if (List.length words > 1) 0 (list_pn words fmt_word $ epi)
-        in
-        let fmt_line ~epi ~prev:_ curr ~next =
-          let not_suffix suffix = not (String.is_suffix curr ~suffix) in
-          let print_ln =
-            List.for_all delim ~f:not_suffix || not break_on_newlines
-          in
-          let fmt_next next =
-            if String.is_empty next then fmt_if_k print_ln (str "\\n")
-            else if Char.equal next.[0] ' ' then
-              fmt_if_k print_ln (str "\\n")
-              $ cbreak ~fits:("", 0, "") ~breaks:("\\", -1, "\\")
-            else
-              fmt_if_k print_ln (str "\\n")
-              $ cbreak ~fits:("", 0, "") ~breaks:("\\", 0, "")
-          in
-          let epi = match next with Some _ -> noop | None -> epi in
-          fmt_words ~epi curr $ opt next fmt_next
-        in
-        let lines = String.split ~on:'\n' s in
-        let lines =
-          if break_on_newlines then lines
-          else
-            let n_lines = List.length lines in
-            (* linebreaks are merged with the preceding line when possible
-               instead of having a blank line in the list *)
-            List.foldi lines ~init:[] ~f:(fun i acc -> function
-              | "" when i < n_lines - 1 -> (
-                match acc with [] -> [""] | h :: t -> (h ^ "\\n") :: t )
-              | line -> line :: acc )
-            |> List.rev
-        in
-        let epi = str "\"" $ fmt_opt epi in
-        hvbox 1 (str "\"" $ list_pn lines (fmt_line ~epi))
-      in
-      let preserve_or_normalize =
-        match c.conf.fmt_opts.break_string_literals.v with
-        | `Never -> `Preserve
-        | `Auto -> `Normalize
-      in
-      let s = Source.string_literal c.source preserve_or_normalize loc in
-      Cmts.fmt c loc'
-      @@
-      match c.conf.fmt_opts.break_string_literals.v with
-      | `Auto when contains_pp_commands s ->
-          let break_on_pp_commands in_ pattern =
-            String.substr_replace_all in_ ~pattern ~with_:(pattern ^ "\n")
-          in
-          List.fold_left delim ~init:s ~f:break_on_pp_commands
-          |> fmt_string_auto ~break_on_newlines:true
-      | `Auto -> fmt_string_auto ~break_on_newlines:false s
-      | `Never -> wrap "\"" "\"" (str s) )
+  | Pconst_string (_, loc', None) ->
+      Cmts.fmt c loc' (fmt_constant_string c ?epi loc)
 
 let fmt_variance_injectivity c vc = hvbox 0 (list vc "" (fmt_str_loc c))
 

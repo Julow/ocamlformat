@@ -42,7 +42,7 @@ and string_aux mode = parse
       { () }
   | '\\' newline ([' ' '\t'] *)
       { string_aux mode lexbuf }
-  | '\\' ['\\' '\'' '\"' 't' 'b' 'r']
+  | '\\' ['\\' '\'' '\"' 't' 'b' 'r' 'n']
       { store_string (Lexing.lexeme lexbuf);
         string_aux mode lexbuf }
   | "\\ "
@@ -54,11 +54,6 @@ and string_aux mode = parse
       { begin match mode with
           | `Normalize -> store_string "\\t"
           | `Preserve -> store_string "\t" end;
-        string_aux mode lexbuf }
-  | "\\n"
-      { begin match mode with
-          | `Normalize -> store_string "\n"
-          | `Preserve -> store_string "\\n" end;
         string_aux mode lexbuf }
   | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
       { store_string (Lexing.lexeme lexbuf);
