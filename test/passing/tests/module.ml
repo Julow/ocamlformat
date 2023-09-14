@@ -109,7 +109,8 @@ let _ =
         :> N with type t = t and type k = t )
   in
   let module M =
-    ( val (* aa *) m (* bb *)
+    ( val (* aa *)
+          m (* bb *)
         : (* cc *)
         M with type t = t (* dd *)
         :> (* ee *)

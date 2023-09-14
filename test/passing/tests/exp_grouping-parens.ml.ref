@@ -226,7 +226,8 @@ let _ =
     foo.fooooo <- Fooo.foo fooo foo.fooooo ;
     Fooo fooo )
   else if y then (
-    f 0 ; f 2 )
+    f 0 ;
+    f 2 )
   else (
     foo.fooooo <- Fooo.foo fooo foo.fooooo ;
     Fooo fooo )

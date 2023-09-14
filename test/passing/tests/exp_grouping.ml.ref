@@ -215,8 +215,8 @@ let _ =
       c ) |]
 
 let () =
-  if a then begin b
-    (* asd *)
+  if a then begin
+    b (* asd *)
   end
 
 [@@@ocamlformat "if-then-else=compact"]
@@ -235,8 +235,8 @@ let _ =
   end
 
 let () =
-  if a then begin b
-    (* asd *)
+  if a then begin
+    b (* asd *)
   end
 
 [@@@ocamlformat "if-then-else=fit-or-vertical"]
@@ -256,8 +256,7 @@ let _ =
 
 let () =
   if a then begin
-    b
-  (* asd *)
+    b (* asd *)
   end
 
 [@@@ocamlformat "if-then-else=keyword-first"]
@@ -279,8 +278,8 @@ let _ =
 
 let () =
   if a
-  then begin b
-    (* asd *)
+  then begin
+    b (* asd *)
   end
 
 [@@@ocamlformat "if-then-else=k-r"]
@@ -358,8 +357,7 @@ let _ =
 
 let () =
   if a then begin
-    b
-  (* asd *)
+    b (* asd *)
   end
 
 let x =
