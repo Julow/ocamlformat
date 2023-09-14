@@ -7,7 +7,7 @@ let x =
     "Package uses flags that aren't recognised by earlier versions in OPAM \
      1.2 branch. At the moment, you should use a tag \"flags:foo\" instead \
      for compatibility"
-    ~detail:alpha_flags (alpha_flags <> [])
+   ~detail:alpha_flags (alpha_flags <> [])
 
 let s2 = "bla bla\n bli bli blo"
 

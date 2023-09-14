@@ -9843,17 +9843,17 @@ let x =
 let x =
   some_value
   |> some_fun (fun x ->
-       do_something ();
-       do_something_else ();
-       return_this_value)
+    do_something ();
+    do_something_else ();
+    return_this_value)
 ;;
 
 let x =
   some_value
   ^ some_fun (fun x ->
-      do_something ();
-      do_something_else ();
-      return_this_value)
+    do_something ();
+    do_something_else ();
+    return_this_value)
 ;;
 
 let bind t ~f =
@@ -9974,21 +9974,21 @@ let _ =
 let _ =
   foo
   |> List.map ~f:(fun x ->
-       do_something ();
-       do_something ();
-       do_something ();
-       do_something ();
-       do_something_else ())
+    do_something ();
+    do_something ();
+    do_something ();
+    do_something ();
+    do_something_else ())
 ;;
 
 let _ =
   foo
   |> List.map ~f:(fun x ->
-       do_something ();
-       do_something ();
-       do_something ();
-       do_something ();
-       do_something_else ())
+    do_something ();
+    do_something ();
+    do_something ();
+    do_something ();
+    do_something_else ())
   |> bar
 ;;
 
@@ -10082,10 +10082,9 @@ let _ =
 
 let _ =
   x == exp
-  ||
-  match x with
-  | { pexp_desc = Pexp_constraint (e, _); _ } -> loop e
-  | _ -> false
+  || match x with
+    | { pexp_desc = Pexp_constraint (e, _); _ } -> loop e
+    | _ -> false
 ;;
 
 let _ =
@@ -10374,9 +10373,9 @@ let _ =
 let _ =
   fooooooooooooooooooooooooooooooo
   |> fooooooooooooooooooooooooooooooo ~fooooooooooooooooooooooooooooooo (fun foo ->
-       match bar with
-       | Some _ -> foo
-       | None -> baz)
+    match bar with
+    | Some _ -> foo
+    | None -> baz)
 ;;
 
 let _ =

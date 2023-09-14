@@ -196,7 +196,7 @@ let f =
   >>= (* fooooooooooooooo fooooooooooooooo fooooooooooooooo
          foooooooooooooooo *)
   fun foooooo fooooo foooo foooooo ->
-  Ok foooooooooooooooooooooooooooooooooooooooooooooooooo
+    Ok foooooooooooooooooooooooooooooooooooooooooooooooooo
 
 let f =
   Ok ()

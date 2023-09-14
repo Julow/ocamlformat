@@ -224,13 +224,12 @@ let () = if a then b (* asd *)
 let _ =
   if x then (
     foo.fooooo <- Fooo.foo fooo foo.fooooo ;
-    Fooo fooo )
+  Fooo fooo )
   else if y then (
-    f 0 ;
-    f 2 )
+    f 0 ; f 2 )
   else (
     foo.fooooo <- Fooo.foo fooo foo.fooooo ;
-    Fooo fooo )
+  Fooo fooo )
 
 let () =
   if a then
@@ -256,12 +255,13 @@ let () = if a then b (* asd *)
 let _ =
   if x then (
     foo.fooooo <- Fooo.foo fooo foo.fooooo ;
-    Fooo fooo
+  Fooo fooo
   ) else if y then (
-    f 0 ; f 2
+    f 0 ;
+  f 2
   ) else (
     foo.fooooo <- Fooo.foo fooo foo.fooooo ;
-    Fooo fooo
+  Fooo fooo
   )
 
 let _ =
@@ -287,7 +287,7 @@ let () =
 
 let _ = ()
 
-let _ = ( (* foo *) )
+let _ = () (* foo *)
 
 let _ = [%ext ()]
 
@@ -315,17 +315,17 @@ let x =
       Some ([], 0)
     else
       match Tbl.find dist_tbl (pv1, pv2) with
-      | None ->
-        (* FIXME: temporary hack to avoid Jane Street's annoying warnings. *)
-        begin
-          try
-            let path', dist = Dijkstra.shortest_path pgraph pv1 pv2 in
-            let path = unwrap_path path' in
-            Tbl.set dist_tbl ~key:(pv1, pv2) ~data:(path, dist) ;
-            Some (path, dist)
-          with Not_found | Not_found_s _ -> None
-        end
-        [@warning "-3"]
-      | pd -> pd
+    | None ->
+      (* FIXME: temporary hack to avoid Jane Street's annoying warnings. *)
+      begin
+        try
+          let path', dist = Dijkstra.shortest_path pgraph pv1 pv2 in
+          let path = unwrap_path path' in
+          Tbl.set dist_tbl ~key:(pv1, pv2) ~data:(path, dist) ;
+          Some (path, dist)
+        with Not_found | Not_found_s _ -> None
+      end
+      [@warning "-3"]
+    | pd -> pd
   in
   ()

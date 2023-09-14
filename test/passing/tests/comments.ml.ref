@@ -178,11 +178,10 @@ let _ =
 
 type t = {a: int [@default a] (* comment *); b: flag}
 
-let () =
-  (* *)
+let () = (* *)
 
-  (* *)
-  ()
+         (* *)
+         ()
 
 (* break when unicode sequence length measured in bytes but ¬ in code
    points *)
@@ -399,7 +398,8 @@ let _ =
   !
     (*a*)
     (*b*)
-    x (*c*) y
+    x
+   (*c*) y
 
 let _ =
   f
