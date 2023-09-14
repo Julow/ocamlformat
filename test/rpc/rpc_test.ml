@@ -80,7 +80,7 @@ let start ?versions () =
            "An error occured while initializing and configuring ocamlformat:\n\
             %s\n\
             %!"
-           msg ;
+          msg ;
          `No_process )
 
 let get_client ?versions () =

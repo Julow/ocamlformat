@@ -503,6 +503,7 @@ let get_if_then_else (c : Conf.t) ~first ~last ~parens_bch ~parens_prev_bch
     | None -> str "else"
   in
   let branch_pro = fmt_or (beginend || parens_bch) " " "@;<1 2>" in
+  let box_expr = None in
   match c.fmt_opts.if_then_else.v with
   | `Compact ->
       { box_branch= hovbox 2
@@ -514,7 +515,7 @@ let get_if_then_else (c : Conf.t) ~first ~last ~parens_bch ~parens_prev_bch
             ~wrap_breaks:
               (get_parens_breaks ~opn_hint_indent:0
                  ~cls_hint:((1, 0), (1000, -2)) )
-      ; box_expr= Some false
+      ; box_expr
       ; expr_pro= None
       ; expr_eol= None
       ; break_end_branch= noop
@@ -525,7 +526,7 @@ let get_if_then_else (c : Conf.t) ~first ~last ~parens_bch ~parens_prev_bch
       ; box_keyword_and_expr= Fn.id
       ; branch_pro
       ; wrap_parens= wrap_parens ~wrap_breaks:(wrap_k (break 1000 2) noop)
-      ; box_expr= Some false
+      ; box_expr
       ; expr_pro= None
       ; expr_eol= Some (fmt "@;<1 2>")
       ; break_end_branch=
@@ -545,7 +546,7 @@ let get_if_then_else (c : Conf.t) ~first ~last ~parens_bch ~parens_prev_bch
             ~wrap_breaks:
               (get_parens_breaks ~opn_hint_indent:2
                  ~cls_hint:((1, 0), (1000, 0)) )
-      ; box_expr= Some false
+      ; box_expr
       ; expr_pro=
           Some
             (fmt_if_k
@@ -568,7 +569,7 @@ let get_if_then_else (c : Conf.t) ~first ~last ~parens_bch ~parens_prev_bch
             ~wrap_breaks:
               (get_parens_breaks ~opn_hint_indent:2
                  ~cls_hint:((1, 0), (1000, 0)) )
-      ; box_expr= None
+      ; box_expr
       ; expr_pro= Some (break_unless_newline 1000 2)
       ; expr_eol= None
       ; break_end_branch= noop
@@ -597,7 +598,7 @@ let get_if_then_else (c : Conf.t) ~first ~last ~parens_bch ~parens_prev_bch
             ~wrap_breaks:
               (get_parens_breaks ~opn_hint_indent:0
                  ~cls_hint:((1, 0), (1000, -2)) )
-      ; box_expr= Some false
+      ; box_expr
       ; expr_pro= None
       ; expr_eol= None
       ; break_end_branch= noop

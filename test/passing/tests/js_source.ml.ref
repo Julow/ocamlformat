@@ -10082,9 +10082,10 @@ let _ =
 
 let _ =
   x == exp
-  || match x with
-    | { pexp_desc = Pexp_constraint (e, _); _ } -> loop e
-    | _ -> false
+  ||
+  match x with
+  | { pexp_desc = Pexp_constraint (e, _); _ } -> loop e
+  | _ -> false
 ;;
 
 let _ =

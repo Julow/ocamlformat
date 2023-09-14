@@ -85,17 +85,20 @@ let foo =
         else (Left foooooo, foooo, fooo, foooooo, fooooooo, foooooooo) )
 
 let foo =
-  if cond1 then ( arm1 ;
+  if cond1 then (
+    arm1 ;
     foooooooooooooo ;
     fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
     List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
         fooooooooooooo ) )
-  else if cond2 then ( arm2 ;
+  else if cond2 then (
+    arm2 ;
     foooooooooooooo ;
     fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
     List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
         fooooooooooooo ) )
-  else ( arm3 ;
+  else (
+    arm3 ;
     foooooooooooooo ;
     fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
     List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
@@ -130,7 +133,9 @@ let _ =
   else ( - )
 
 let _ =
-  if x then fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
-    xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
-  else fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
-    xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
+  if x then
+    fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
+      xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
+  else
+    fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
+      xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz

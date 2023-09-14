@@ -2,8 +2,7 @@ let _ =
   if b then
     e
   else (
-    e1 ;
-  e2
+    e1 ; e2
   )
 
 let _ =
@@ -11,25 +10,24 @@ let _ =
     e
   else (
     something loooooooooooooooooooooooooooooooong enough to_trigger a break ;
-  this is more
+    this is more
   )
 
 let _ =
   if b then (
-    e1 ;
-  e2
+    e1 ; e2
   ) else (
     something loooooooooooooooooooooooooooooooong enough to_trigger a break ;
-  this is more
+    this is more
   )
 
 let _ =
   if b then (
     something loooooooooooooooooooooooooooooooong enough to_trigger a break ;
-  this is more
+    this is more
   ) else if b1 then (
     something loooooooooooooooooooooooooooooooong enough to_trigger a break ;
-  this is more
+    this is more
   ) else
     e
 ;;
@@ -132,22 +130,22 @@ let foo =
 let foo =
   if cond1 then (
     arm1 ;
-  foooooooooooooo ;
-  fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
-  List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
-      fooooooooooooo )
+    foooooooooooooo ;
+    fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
+    List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
+        fooooooooooooo )
   ) else if cond2 then (
     arm2 ;
-  foooooooooooooo ;
-  fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
-  List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
-      fooooooooooooo )
+    foooooooooooooo ;
+    fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
+    List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
+        fooooooooooooo )
   ) else (
     arm3 ;
-  foooooooooooooo ;
-  fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
-  List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
-      fooooooooooooo )
+    foooooooooooooo ;
+    fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
+    List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
+        fooooooooooooo )
   )
 
 let foo =
@@ -170,11 +168,9 @@ let foo =
 
 let foo =
   if cmp < 0 then
-    (* foo *)
-    a + b
+    (* foo *) a + b
   else
-    (* foo *)
-    a - b
+    (* foo *) a - b
 
 let foo =
   if cmp < 0 then
@@ -191,8 +187,7 @@ let _ =
   if fooo then
     ( + )
   else if bar then
-    ( * )
-  [@attr]
+    ( * ) [@attr]
   else if foobar then
     ( / )
   else
@@ -201,7 +196,7 @@ let _ =
 let _ =
   if x then
     fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
-  xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
+     xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
   else
     fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
-  xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
+     xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz

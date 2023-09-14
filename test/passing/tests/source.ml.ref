@@ -1764,14 +1764,17 @@ let rec ins : type n. int -> n avl -> (n avl, n succ avl) sum =
   | Leaf -> Inr (Node (Same, Leaf, x, Leaf))
   | Node (bal, a, y, b) -> (
       if x = y then Inl t
-      else if x < y then match ins x a with
+      else if x < y then
+        match ins x a with
         | Inl a -> Inl (Node (bal, a, y, b))
         | Inr a -> (
           match bal with
           | Less -> Inl (Node (Same, a, y, b))
           | Same -> Inr (Node (More, a, y, b))
           | More -> rotr a y b )
-      else match ins x b with Inl b -> Inl (Node (bal, a, y, b) : n avl)
+      else
+        match ins x b with
+        | Inl b -> Inl (Node (bal, a, y, b) : n avl)
         | Inr b -> (
           match bal with
           | More -> Inl (Node (Same, a, y, b) : n avl)
@@ -1803,7 +1806,8 @@ let rec del : type n. int -> n avl -> n avl_del =
   match t with
   | Leaf -> Dsame Leaf
   | Node (bal, l, x, r) -> (
-      if x = y then match r with
+      if x = y then
+        match r with
         | Leaf -> (
           match bal with Same -> Ddecr (Eq, l) | More -> Ddecr (Eq, l) )
         | Node _ -> (
@@ -1814,7 +1818,8 @@ let rec del : type n. int -> n avl -> n avl_del =
           | More, (z, Inl r) -> (
             match rotr l z r with Inl t -> Ddecr (Eq, t) | Inr t -> Dsame t )
           )
-      else if y < x then match del y l with
+      else if y < x then
+        match del y l with
         | Dsame l -> Dsame (Node (bal, l, x, r))
         | Ddecr (Eq, l) -> (
           match bal with
@@ -1823,7 +1828,9 @@ let rec del : type n. int -> n avl -> n avl_del =
           | Less -> (
             match rotl l x r with Inl t -> Ddecr (Eq, t) | Inr t -> Dsame t )
           )
-      else match del y r with Dsame r -> Dsame (Node (bal, l, x, r))
+      else
+        match del y r with
+        | Dsame r -> Dsame (Node (bal, l, x, r))
         | Ddecr (Eq, r) -> (
           match bal with
           | Same -> Dsame (Node (More, l, x, r))
@@ -1970,8 +1977,10 @@ let rec assoc : type a. string -> a rep -> assoc list -> a =
  fun x r -> function
   | [] -> raise Not_found
   | Assoc (x', r', v) :: env ->
-      if x = x' then match rep_equal r r' with
-        | None -> failwith ("Wrong type for " ^ x) | Some Eq -> v
+      if x = x' then
+        match rep_equal r r' with
+        | None -> failwith ("Wrong type for " ^ x)
+        | Some Eq -> v
       else assoc x r env
 
 type _ term =
@@ -2100,7 +2109,9 @@ let rec lookup : type e. string -> e ctx -> e checked =
   | Cnil -> Cerror ("Name not found: " ^ name)
   | Ccons (l, s, t, rs) -> (
       if s = name then Cok (Var l, t)
-      else match lookup name rs with Cerror m -> Cerror m
+      else
+        match lookup name rs with
+        | Cerror m -> Cerror m
         | Cok (v, t) -> Cok (Shift v, t) )
 
 let rec tc : type n e. n nat -> e ctx -> term -> e checked =
@@ -7391,10 +7402,12 @@ module Bootstrap
     | BE.E -> raise Not_found
     | BE.H (x, p) -> (
         if PrimH.isEmpty p then BE.E
-        else match PrimH.findMin p with
+        else
+          match PrimH.findMin p with
           | BE.H (y, p1) ->
               let p2 = PrimH.deleteMin p in
-              BE.H (y, PrimH.merge p1 p2) | BE.E -> assert false )
+              BE.H (y, PrimH.merge p1 p2)
+          | BE.E -> assert false )
 end
 
 module LeftistHeap (Element : ORDERED) : HEAP with module Elem = Element =

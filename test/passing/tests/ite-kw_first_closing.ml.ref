@@ -107,7 +107,8 @@ let foo =
 
 let foo =
   if cond1
-  then (arm1 ;
+  then (
+    arm1 ;
     foooooooooooooo ;
     fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
     List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
@@ -115,14 +116,16 @@ let foo =
     )
   )
   else if cond2
-  then (arm2 ;
+  then (
+    arm2 ;
     foooooooooooooo ;
     fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
     List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
         fooooooooooooo
     )
   )
-  else (arm3 ;
+  else (
+    arm3 ;
     foooooooooooooo ;
     fooooooooooooooooooo fooooooooooooooo foooooooooooo ;
     List.foo ~fooooooo:foooooooooooooooo ~foo:(fun fooooooooo ->
@@ -168,7 +171,7 @@ let _ =
   if x
   then
     fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
-    xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
+      xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
   else
     fun xxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyy zzzzzzzzzzz ->
-    xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz
+      xxxxxxxxx yyyyyyyyyy zzzzzzzzzzzz

@@ -764,9 +764,10 @@ and fmt_core_type c ?(box = true) ?pro ?(pro_space = true) ?constraint_ctx
   Cmts.fmt c ptyp_loc
   @@ (fun k -> k $ fmt_docstring c ~pro:(fmt "@ ") doc)
   @@ ( if List.is_empty atrs then Fn.id
-       else fun k ->
-         hvbox 0 (Params.parens c.conf (k $ fmt_attributes c ~pre:Cut atrs))
-     )
+       else
+         fun k ->
+           hvbox 0
+             (Params.parens c.conf (k $ fmt_attributes c ~pre:Cut atrs)) )
   @@
   let parens = parenze_typ xtyp in
   hvbox_if box 0
@@ -1594,7 +1595,7 @@ and fmt_infix_op_args c ~parens xexp op_args =
     in
     if Params.Exp.Infix_op_arg.dock c.conf xarg then
       (* Indentation of docked fun or function start before the operator. *)
-      hovbox 2 (fmt_expression c ~parens ~box:false ~pro xarg)
+      fmt_expression c ~parens ~pro xarg
     else
       let expr_box =
         match xarg.ast.pexp_desc with
@@ -1948,7 +1949,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
         ( pro
         $ Params.Exp.wrap c.conf ~parens
             ( fmt_str_loc c op $ fmt_if has_cmts "@,"
-            $ fmt_expression c ~box (sub_exp ~ctx e)
+            $ fmt_expression c (sub_exp ~ctx e)
             $ fmt_atrs )
         $ epi )
   | Pexp_apply (e0, e1N1) -> (
@@ -2639,7 +2640,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
       hvbox_if box 0
         ( pro
         $ Params.parens_if outer_parens c.conf
-            ( fmt_expression c ~box ?eol ~parens:inner_parens ~ext
+            ( fmt_expression c ?eol ~parens:inner_parens ~ext
                 (sub_exp ~ctx:(Str str) e1)
             $ fmt_atrs )
         $ epi )
@@ -2655,8 +2656,7 @@ and fmt_expression c ?(box = true) ?pro ?epi ?eol ?parens ?(indent_wrap = 0)
     when List.is_empty pexp_attributes
          && Source.extension_using_sugar ~name:ext ~payload:e1.pexp_loc ->
       hvbox_if box 0
-        ( fmt_expression c ~box ~pro ?eol ~parens ~ext
-            (sub_exp ~ctx:(Str str) e1)
+        ( fmt_expression c ~pro ?eol ~parens ~ext (sub_exp ~ctx:(Str str) e1)
         $ fmt_atrs $ epi )
   | Pexp_extension ext ->
       hvbox_if box 0
