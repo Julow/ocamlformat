@@ -145,9 +145,7 @@ while IFS=, read git_platform namespace project opts; do
   fi
 
   ln -sf "ocamlformat-next" "$bin_dir/ocamlformat"
-  apply_fmt "$version" "Preview: Upgrade to OCamlformat $version (unreleased)
-
-The aim of this preview is to gather feedback.
+  apply_fmt "$version" "Upgrade to OCamlformat $version
 
 Changelog can be found here: https://github.com/ocaml-ppx/ocamlformat/blob/main/CHANGES.md"
 
