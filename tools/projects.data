@@ -1,5 +1,1 @@
-github,ocaml,dune,<no-ignore-revs>
-github,ocaml,ocaml-lsp,
-github,ocaml,odoc,
-github,ocaml-ppx,ppxlib,
-github,realworldocaml,mdx,
+github,ocaml-ppx,ppxlib,<signoff>
