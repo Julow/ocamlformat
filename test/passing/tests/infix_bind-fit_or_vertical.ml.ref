@@ -133,9 +133,10 @@ let end_gen_implementation ?toplevel ~ppf_dump
     (clambda : clambda_and_constants) =
   Emit.begin_assembly () ;
   ( clambda
-  ++ Profile.record "cmm" (Cmmgen.compunit ~ppf_dump)
-  ++ Profile.record "compile_phrases" (List.iter (compile_phrase ~ppf_dump))
-  ++ fun () -> () ) ;
+    ++ Profile.record "cmm" (Cmmgen.compunit ~ppf_dump)
+    ++ Profile.record "compile_phrases"
+         (List.iter (compile_phrase ~ppf_dump))
+    ++ fun () -> () ) ;
   fooooooooooooooo
 
 let foo =

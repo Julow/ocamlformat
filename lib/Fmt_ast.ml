@@ -1902,8 +1902,8 @@ and fmt_match c ?pro ~parens ?ext ctx xexp cs e0 keyword =
              $ space_break $ str "with" )
          $ space_break $ fmt_cases c ctx cs ) )
 
-and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens
-    ?(indent_wrap = 0) ?ext ({ast= exp; ctx= ctx0} as xexp) =
+and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens ?ext
+    ({ast= exp; ctx= ctx0} as xexp) =
   protect c (Exp exp)
   @@
   let {pexp_desc; pexp_loc; pexp_attributes; _} = exp in
@@ -2055,7 +2055,6 @@ and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens
     when not c.conf.fmt_opts.break_infix_before_func.v ->
       let xr = sub_exp ~ctx r in
       let parens_r = parenze_exp xr in
-      let indent_wrap = if parens then -2 else 0 in
       let followed_by_infix_op =
         match body with
         | Pfunction_body
@@ -2070,9 +2069,9 @@ and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens
               ~ctx0:ctx (*~box:false to fix regression on infix *)
               ~parens:parens_r
               ~wrap_intro:(fun intro ->
-                hvbox indent_wrap
+                hvbox 0
                   ( fmt_if has_attr (str "(")
-                  $ fmt_expression ~indent_wrap c (sub_exp ~ctx l)
+                  $ fmt_expression c (sub_exp ~ctx l)
                   $ space_break
                   $ hovbox 0 (fmt_str_loc c op $ space_break $ intro) )
                 $ fmt_or followed_by_infix_op force_break space_break )
@@ -2134,7 +2133,7 @@ and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens
       pro
       $ hvbox_if outer_wrap 0
           (Params.parens_if outer_wrap c.conf
-             (hvbox indent_wrap
+             (hvbox 0
                 ( fmt_infix_op_args ~parens:inner_wrap c xexp infix_op_args
                 $ fmt_atrs ) ) )
   | Pexp_prefix (op, e) ->
@@ -2297,7 +2296,7 @@ and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens
   | Pexp_cons l ->
       pro
       $ Cmts.fmt c pexp_loc
-          ( hvbox indent_wrap
+          ( hvbox 0
               (fmt_infix_op_args c ~parens xexp
                  (List.mapi l ~f:(fun i e ->
                       ( None
@@ -2877,13 +2876,11 @@ and fmt_expression c ?(box = true) ?(pro = noop) ?eol ?parens
       in
       pro
       $ wrap_beginend
-          (fmt_expression c ~box ?eol ~parens:false ~indent_wrap ?ext
-             (sub_exp ~ctx e) )
+          (fmt_expression c ~box ?eol ~parens:false ?ext (sub_exp ~ctx e))
   | Pexp_parens e ->
       pro
       $ hvbox 0
-          (fmt_expression c ~box ?eol ~parens:true ~indent_wrap ?ext
-             (sub_exp ~ctx e) )
+          (fmt_expression c ~box ?eol ~parens:true ?ext (sub_exp ~ctx e))
       $ fmt_atrs
 
 and fmt_let_bindings c ~ctx0 ~parens ~has_attr ~fmt_atrs ~fmt_expr ~loc_in
