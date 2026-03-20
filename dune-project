@@ -40,6 +40,12 @@
  (description
   "OCamlFormat is a tool to automatically format OCaml code in a uniform style.")
  (depends
+  (dune
+   (or
+    (>= 2.8)
+    (and
+     (< 3.22)
+     :with-test)))
   (ocaml
    (>= 4.08))
   (alcotest
@@ -50,7 +56,6 @@
    (>= v0.12.0))
   (cmdliner
    (>= 1.1.0))
-  dune
   dune-build-info
   either
   fix
