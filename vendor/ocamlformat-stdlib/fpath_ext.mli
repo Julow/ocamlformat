@@ -14,4 +14,8 @@ val to_string : ?relativize:bool -> t -> string
 (** If [relativize] is set to [true] (it is set to [false] by default), the
     path is relativized according to the [cwd]. *)
 
+val normalized_to_string : t -> string
+(** Use [/] as a path separator on every platforms to ensure reproducible
+    output in tests. *)
+
 val pp : Format.formatter -> t -> unit

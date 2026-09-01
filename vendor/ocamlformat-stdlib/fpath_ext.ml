@@ -13,4 +13,8 @@ let to_string ?(relativize = false) p =
       ~default:(to_string p) ~f:to_string
   else to_string p
 
-let pp fmt p = Format.fprintf fmt "%s" (to_string ~relativize:true p)
+let normalized_to_string p =
+  let p = match relativize ~root:(cwd ()) p with Some p -> p | None -> p in
+  fst (split_volume p) ^ String.concat "/" (segs p)
+
+let pp fmt p = Format.fprintf fmt "%s" (normalized_to_string p)

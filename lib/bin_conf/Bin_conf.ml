@@ -579,7 +579,7 @@ let build_config ~enable_outside_detected_project ~root ~file ~is_stdin =
        | Some root ->
            Format.sprintf
              "no [.ocamlformat] was found within the project (root: %s)"
-             (Fpath.to_string ~relativize:true root)
+             (Fpath.normalized_to_string root)
        | None -> "no project root was found"
      in
      warn ~loc:(Location.in_file file)
