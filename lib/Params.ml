@@ -266,7 +266,7 @@ module Exp = struct
           else if
             ctx_is_apply_and_exp_is_last_arg_and_other_args_are_simple c ~ctx
               ~ctx0
-          then 4
+          then c.fmt_opts.fun_as_last_arg_indent.v
           else 2
         in
         let name = "Params.box_fun_expr" in

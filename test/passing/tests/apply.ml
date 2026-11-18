@@ -100,3 +100,27 @@ let _ =
 let f (x :: y) = x
 
 let f (* xx *) ((* aa *) x (* bb *) :: (* cc *) y (* dd *)) (* yy *) = x
+
+module M = struct
+  let _ =
+    f (fun _ ->
+        foooooooooooooooooooooooooooooooooo
+          foooooooooooooooooooooooooooooooooo
+          foooooooooooooooooooooooooooooooooo)
+
+  [@@@ocamlformat "fun-as-last-arg-indent=2"]
+
+  let _ =
+    f (fun _ ->
+        foooooooooooooooooooooooooooooooooo
+          foooooooooooooooooooooooooooooooooo
+          foooooooooooooooooooooooooooooooooo)
+
+  [@@@ocamlformat "dock-collection-brackets=false"]
+
+  let _ =
+    f (fun _ ->
+        foooooooooooooooooooooooooooooooooo
+          foooooooooooooooooooooooooooooooooo
+          foooooooooooooooooooooooooooooooooo)
+end

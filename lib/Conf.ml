@@ -73,6 +73,7 @@ let conventional_profile from =
   ; exp_grouping= elt `Preserve
   ; extension_indent= elt 2
   ; field_space= elt `Loose
+  ; fun_as_last_arg_indent= elt 4
   ; function_indent= elt 2
   ; function_indent_nested= elt `Never
   ; if_then_else= elt `Compact
@@ -144,6 +145,7 @@ let ocamlformat_profile from =
   ; exp_grouping= elt `Preserve
   ; extension_indent= elt 2
   ; field_space= elt `Tight
+  ; fun_as_last_arg_indent= elt 4
   ; function_indent= elt 2
   ; function_indent_nested= elt `Never
   ; if_then_else= elt `Compact
@@ -214,6 +216,7 @@ let janestreet_profile from =
   ; exp_grouping= elt `Parens
   ; extension_indent= elt 2
   ; field_space= elt `Loose
+  ; fun_as_last_arg_indent= elt 4
   ; function_indent= elt 2
   ; function_indent_nested= elt `Never
   ; if_then_else= elt `Keyword_first
@@ -793,6 +796,19 @@ module Formatting = struct
       (fun conf elt -> update conf ~f:(fun f -> {f with field_space= elt}))
       (fun conf -> conf.fmt_opts.field_space)
 
+  let fun_as_last_arg_indent =
+    let docv = "COLS" in
+    let doc =
+      "Indentation of the body of a (fun ...) when passed as the last \
+       argument of a function call ($(docv) columns). Incompatible with \
+       $(b,function-indent-nested=always) and $(b,ocp-indent-compat)."
+    in
+    let names = ["fun-as-last-arg-indent"] in
+    Decl.int ~names ~default ~doc ~docv ~kind
+      (fun conf elt ->
+        update conf ~f:(fun f -> {f with fun_as_last_arg_indent= elt}) )
+      (fun conf -> conf.fmt_opts.fun_as_last_arg_indent)
+
   let function_indent =
     let docv = "COLS" in
     let doc = "Indentation of function cases ($(docv) columns)." in
@@ -1367,6 +1383,7 @@ module Formatting = struct
       ; elt exp_grouping
       ; elt extension_indent
       ; elt field_space
+      ; elt fun_as_last_arg_indent
       ; elt function_indent
       ; elt function_indent_nested
       ; elt if_then_else

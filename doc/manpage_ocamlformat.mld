@@ -191,6 +191,12 @@ OPTIONS (CODE FORMATTING STYLE)
            use a space. tight-decl is tight for declarations and loose for
            instantiations. The default value is loose.
 
+       --fun-as-last-arg-indent=COLS
+           Indentation of the body of a (fun ...) when passed as the last
+           argument of a function call (COLS columns). Incompatible with
+           function-indent-nested=always and ocp-indent-compat. The default
+           value is 4.
+
        --function-indent=COLS
            Indentation of function cases (COLS columns). The default value is
            2.
